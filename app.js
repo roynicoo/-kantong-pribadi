@@ -111,7 +111,8 @@ function readConfig() {
   const c = window.KANTONG_CONFIG || {};
   const url = String(c.url || '').replace(/\/+$/, '');
   const key = String(c.anonKey || '');
-  return url && key ? { url, key } : null;
+  /* CloudStore membaca properti `anonKey`; simpan juga sebagai `key` untuk probe. */
+  return url && key ? { url, anonKey: key, key } : null;
 }
 
 async function probeSchema(cfg) {
