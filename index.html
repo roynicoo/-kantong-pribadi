@@ -1,10 +1,291 @@
 <!doctype html>
-<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#123f3a"><meta name="description" content="Kantong — catatan keuangan pribadi, lebih tenang setiap hari."><title>Kantong — Keuangan pribadi</title><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="stylesheet" href="style.css"><script src="config.js"></script><script type="module" src="app.js"></script></head>
-<body><header class="topbar"><a class="brand" href="./" aria-label="Kantong beranda"><span class="brandmark">k.</span> kantong<span class="branddot">●</span></a><span class="tagline">Ruang kecil untuk rencana besar.</span><div class="account"><span id="identity"></span><button id="logout" class="quiet" hidden>Keluar</button></div></header>
-<main><section id="gate" class="gate"><div class="intro"><p class="eyebrow">KEUANGAN PRIBADI, TANPA RUMIT</p><h1>Kenali alurnya.<br>Tenangkan pikiran.</h1><p>Catat yang masuk, pahami yang keluar.<br>Satu tempat untuk keuangan sehari-hari Anda.</p><div class="intro-foot">01 / CATAT &nbsp; 02 / PAHAMI &nbsp; 03 / RENCANAKAN</div></div><div class="login-panel"><p class="eyebrow">SELAMAT DATANG DI KANTONG</p><h2>Mulai dari sini.</h2><p id="setup">Memeriksa konfigurasi…</p><form id="login" hidden><label>Email<input id="email" type="email" autocomplete="username" required placeholder="nama@email.com"></label><label>Kata sandi<input id="password" type="password" autocomplete="current-password" required></label><button class="primary" type="submit">Masuk ke Kantong</button><p class="hint">Akun dibuat oleh pemilik melalui dashboard Supabase. Tidak ada pendaftaran publik.</p></form><button id="demo" class="secondary">Coba demo lokal</button><p class="hint">Demo kosong, tersimpan hanya di browser ini. Tidak terhubung ke cloud.</p></div></section>
-<div id="notice" role="status" aria-live="polite" hidden></div>
-<section id="workspace" hidden><div class="workspace-head"><div><p class="eyebrow">BUKU KEUANGAN ANDA</p><h1>Setiap rupiah, bercerita.</h1><p id="sync" class="sync"></p></div><div class="month-control"><label for="month">Periode laporan</label><input id="month" type="month" min="0001-01" max="9998-12" required></div></div>
-<div class="summary"><article class="balance"><p>Sisa bulan ini <span>↗</span></p><h2 id="balance">—</h2><small>Pemasukan dikurangi pengeluaran periode ini</small></article><article><p><span class="flow in">↓</span> Pemasukan</p><h2 id="income">—</h2><small>Yang masuk ke kantong</small></article><article><p><span class="flow out">↑</span> Pengeluaran</p><h2 id="expense">—</h2><small>Yang sudah Anda gunakan</small></article></div>
-<div class="body-grid"><div class="ledger"><section class="transactions"><div class="section-head"><div><p class="eyebrow">CATATAN HARIAN</p><h2>Transaksi <span id="count" class="count">0</span></h2></div><button id="refresh" class="quiet">Muat ulang</button></div><div class="table-wrap"><table><thead><tr><th>Tanggal / catatan</th><th>Kategori</th><th class="number">Nominal</th><th class="actions">Aksi</th></tr></thead><tbody id="rows"></tbody></table></div><div id="empty" class="empty"><span class="empty-symbol">＋</span><h3>Awali dengan satu catatan.</h3><p>Belum ada transaksi pada bulan ini.<br>Tambahkan pemasukan atau pengeluaran pertama Anda.</p></div><div class="ledger-foot"><span>Seluruh transaksi bulan terpilih</span><span id="period-label"></span></div></section><section class="category-panel"><div class="section-head"><div><p class="eyebrow">KE MANA UANG PERGI?</p><h2>Pengeluaran per kategori</h2></div></div><div id="categories"></div></section></div>
-<aside><section class="entry-panel"><p class="eyebrow">SEDIKIT DEMI SEDIKIT, LEBIH TERATUR</p><h2 id="form-title">Catat transaksi</h2><form id="entry"><fieldset id="entry-fields"><label>Jenis transaksi<select id="type" name="type"><option value="expense">Pengeluaran</option><option value="income">Pemasukan</option></select></label><label>Nominal (Rp)<input id="amount" name="amount" type="text" inputmode="numeric" pattern="[0-9]+" placeholder="0" required aria-describedby="amount-help"></label><small id="amount-help" class="hint">Rupiah bulat, tanpa titik atau koma.</small><div class="form-pair"><label>Tanggal<input id="date" name="date" type="date" min="0001-01-01" max="9999-12-31" required></label><label>Kategori<select id="category" name="category"></select></label></div><label>Catatan <span class="optional">opsional</span><textarea id="notes" name="notes" rows="2" maxlength="500" placeholder="Untuk apa hari ini?"></textarea></label><button id="save" class="primary" type="submit">Simpan transaksi</button><button id="cancel" class="quiet full" type="button" hidden>Batal mengubah</button></fieldset></form></section><section class="export-panel"><p class="eyebrow">SIMPAN & TINJAU KEMBALI</p><h2>Catatan, milik Anda.</h2><p>Unduh laporan bulanan atau cadangkan seluruh transaksi.</p><button id="print" class="secondary full">Cetak / simpan PDF</button><div class="export-pair"><button id="csv" class="quiet">CSV bulan ini</button><button id="json" class="quiet">Backup JSON</button></div><small class="hint">PDF & CSV: bulan terpilih. JSON: semua bulan.</small></section></aside></div>
-</section></main><footer><span>kantong — lebih sadar, lebih tenang.</span><span>Catatan pribadi. Bukan nasihat keuangan.</span></footer><noscript>Aktifkan JavaScript untuk menggunakan Kantong.</noscript></body></html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f7f2e7">
+<meta name="description" content="Kantong — catatan keuangan pribadi: pemasukan, pengeluaran, rekap bulanan, dan cetak PDF.">
+<title>Kantong — Keuangan pribadi</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="ic-arrow-in" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-arrow-out" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-pencil" viewBox="0 0 24 24"><path d="M4 20h4l10-10-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="ic-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.2 8.2 0 1 1 9.5 4a6.6 6.6 0 0 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4.4 4.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="ic-print" viewBox="0 0 24 24"><path d="M7 9V4h10v5M7 18H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M7 14h10v6H7z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-download" viewBox="0 0 24 24"><path d="M12 4v10M8 11l4 4 4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-upload" viewBox="0 0 24 24"><path d="M12 16V6M8 9l4-4 4 4M5 19h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9M20 4v4h-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-chevron" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+</svg>
+
+<header class="topbar">
+  <a class="brand" href="./" aria-label="Kantong beranda">
+    <span class="brandmark" aria-hidden="true">k·</span>
+    <span class="brandname">kantong</span>
+  </a>
+  <p class="tagline">Ruang kecil untuk rencana besar.</p>
+  <div class="account">
+    <span id="identity" class="identity"></span>
+    <button id="theme" class="icon-btn" type="button" aria-label="Ganti tema" title="Ganti tema terang/gelap">
+      <svg class="ic ic-sun" aria-hidden="true"><use href="#ic-sun"></use></svg>
+      <svg class="ic ic-moon" aria-hidden="true"><use href="#ic-moon"></use></svg>
+    </button>
+    <button id="logout" class="ghost-btn" type="button" hidden>Keluar</button>
+  </div>
+</header>
+
+<main>
+  <!-- ============ GERBANG ============ -->
+  <section id="gate" class="gate">
+    <div class="gate-copy">
+      <p class="eyebrow">Keuangan pribadi, tanpa rumit</p>
+      <h1>Kenali alurnya.<br><em>Tenangkan pikiran.</em></h1>
+      <p class="lede">Catat yang masuk, pahami yang keluar. Satu tempat untuk keuangan sehari-hari Anda — lengkap dengan rekap bulanan yang siap dicetak.</p>
+      <ol class="steps">
+        <li><b>01</b> Catat</li>
+        <li><b>02</b> Pahami</li>
+        <li><b>03</b> Rencanakan</li>
+      </ol>
+    </div>
+
+    <div class="gate-panel">
+      <p class="eyebrow">Selamat datang di Kantong</p>
+      <h2>Mulai dari sini.</h2>
+      <p id="setup" class="setup">Memeriksa konfigurasi…</p>
+      <form id="login" hidden>
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="username" required placeholder="nama@email.com">
+        <label for="password">Kata sandi</label>
+        <input id="password" type="password" autocomplete="current-password" required>
+        <button class="primary" type="submit">Masuk ke Kantong</button>
+        <p class="hint">Akun dibuat oleh pemilik melalui dashboard Supabase. Tidak ada pendaftaran publik.</p>
+      </form>
+      <div class="gate-sep"><span>atau</span></div>
+      <button id="demo" class="ghost-btn wide" type="button">Coba demo lokal</button>
+      <p class="hint">Demo kosong, tersimpan hanya di browser ini. Tidak terhubung ke cloud.</p>
+    </div>
+  </section>
+
+  <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+
+  <!-- ============ RUANG KERJA ============ -->
+  <section id="workspace" hidden>
+    <div class="ws-head">
+      <div>
+        <p class="eyebrow">Buku keuangan Anda</p>
+        <h1>Setiap rupiah, bercerita.</h1>
+        <p id="sync" class="sync"></p>
+      </div>
+      <div class="month-nav">
+        <button class="icon-btn round" type="button" id="prev-month" aria-label="Bulan sebelumnya"><svg class="ic" aria-hidden="true"><use href="#ic-chevron"></use></svg></button>
+        <div class="month-field">
+          <label for="month">Periode</label>
+          <input id="month" type="month" min="0001-01" max="9998-12" required>
+        </div>
+        <button class="icon-btn round flip" type="button" id="next-month" aria-label="Bulan berikutnya"><svg class="ic" aria-hidden="true"><use href="#ic-chevron"></use></svg></button>
+        <button class="ghost-btn" type="button" id="this-month">Bulan ini</button>
+      </div>
+    </div>
+
+    <div class="summary">
+      <article class="card balance-card">
+        <div class="card-top">
+          <p>Sisa bulan ini</p>
+          <span id="delta-out" class="delta" hidden></span>
+        </div>
+        <h2 id="balance" class="figure">—</h2>
+        <p class="card-note">Pemasukan dikurangi pengeluaran periode ini — arus kas, bukan saldo rekening.</p>
+        <p class="card-foot"><span id="daily-avg">—</span> rata-rata pengeluaran per hari</p>
+      </article>
+      <article class="card">
+        <p class="card-top"><span class="dot in" aria-hidden="true"></span> Pemasukan</p>
+        <h3 id="income" class="figure small">—</h3>
+        <p class="card-note" id="income-note">Yang masuk ke kantong</p>
+      </article>
+      <article class="card">
+        <p class="card-top"><span class="dot out" aria-hidden="true"></span> Pengeluaran</p>
+        <h3 id="expense" class="figure small">—</h3>
+        <p class="card-note" id="expense-note">Yang sudah Anda gunakan</p>
+      </article>
+    </div>
+
+    <div class="insights">
+      <section class="card chart-card">
+        <div class="card-head">
+          <div>
+            <p class="eyebrow">Enam bulan terakhir</p>
+            <h2>Tren masuk &amp; keluar</h2>
+          </div>
+          <ul class="legend-inline">
+            <li><span class="dot in" aria-hidden="true"></span> Masuk</li>
+            <li><span class="dot out" aria-hidden="true"></span> Keluar</li>
+          </ul>
+        </div>
+        <div class="chart-bars" id="chart-bars" role="img" aria-label="Grafik pemasukan dan pengeluaran enam bulan"></div>
+      </section>
+
+      <section class="card donut-card">
+        <div class="card-head">
+          <div>
+            <p class="eyebrow">Ke mana uang pergi</p>
+            <h2>Pengeluaran per kategori</h2>
+          </div>
+        </div>
+        <div class="donut-wrap">
+          <div id="categories" class="donut" role="img" aria-label="Komposisi pengeluaran per kategori"></div>
+          <ul id="legend" class="legend"></ul>
+        </div>
+      </section>
+    </div>
+
+    <div class="body-grid">
+      <div class="ledger">
+        <section class="card transactions">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Catatan harian</p>
+              <h2>Transaksi <span id="count" class="count">0</span></h2>
+            </div>
+            <button id="refresh" class="ghost-btn" type="button">
+              <svg class="ic" aria-hidden="true"><use href="#ic-refresh"></use></svg> Muat ulang
+            </button>
+          </div>
+
+          <div class="toolbar">
+            <label class="search" for="search">
+              <svg class="ic" aria-hidden="true"><use href="#ic-search"></use></svg>
+              <input id="search" type="search" placeholder="Cari catatan…" autocomplete="off">
+            </label>
+            <select id="ftype" aria-label="Saring jenis transaksi">
+              <option value="">Semua jenis</option>
+              <option value="expense">Pengeluaran</option>
+              <option value="income">Pemasukan</option>
+            </select>
+            <select id="fcat" aria-label="Saring kategori">
+              <option value="">Semua kategori</option>
+            </select>
+            <span id="filter-count" class="filter-count" aria-live="polite"></span>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th scope="col">Tanggal / catatan</th><th scope="col">Kategori</th><th scope="col" class="number">Nominal</th><th scope="col" class="actions"><span class="sr">Aksi</span></th></tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+
+          <div id="empty" class="empty">
+            <span class="empty-symbol" aria-hidden="true">＋</span>
+            <h3>Awali dengan satu catatan.</h3>
+            <p>Belum ada transaksi pada periode ini.<br>Tambahkan pemasukan atau pengeluaran pertama Anda.</p>
+          </div>
+
+          <div class="ledger-foot">
+            <span>Seluruh transaksi periode terpilih</span>
+            <span id="period-label"></span>
+          </div>
+        </section>
+
+        <section class="card top-expenses">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Paling menguras</p>
+              <h2>Pengeluaran terbesar</h2>
+            </div>
+          </div>
+          <ol id="top-list" class="top-list"></ol>
+        </section>
+      </div>
+
+      <aside class="side">
+        <section class="card entry-panel" id="entry-panel">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Sedikit demi sedikit</p>
+              <h2 id="form-title">Catat transaksi</h2>
+            </div>
+            <button class="icon-btn close-sheet" type="button" id="sheet-close" aria-label="Tutup formulir"><svg class="ic" aria-hidden="true"><use href="#ic-close"></use></svg></button>
+          </div>
+
+          <div class="quick" id="quick" aria-label="Isi cepat">
+            <button type="button" data-q-type="expense" data-q-cat="Makan" data-q-amount="25000" data-q-note="Makan">Makan</button>
+            <button type="button" data-q-type="expense" data-q-cat="Transportasi" data-q-amount="15000" data-q-note="Transport">Transport</button>
+            <button type="button" data-q-type="expense" data-q-cat="Belanja" data-q-amount="50000" data-q-note="Belanja harian">Belanja</button>
+            <button type="button" data-q-type="expense" data-q-cat="Tagihan" data-q-amount="100000" data-q-note="Tagihan">Tagihan</button>
+          </div>
+
+          <form id="entry" novalidate>
+            <fieldset id="entry-fields">
+              <div class="seg" role="group" aria-label="Jenis transaksi">
+                <label><input type="radio" name="type" value="expense" checked><span>Pengeluaran</span></label>
+                <label><input type="radio" name="type" value="income"><span>Pemasukan</span></label>
+              </div>
+              <label for="amount">Nominal (Rp)</label>
+              <input id="amount" name="amount" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="0" required aria-describedby="amount-help">
+              <small id="amount-help" class="hint">Rupiah bulat, tanpa titik atau koma.</small>
+              <div class="form-pair">
+                <div>
+                  <label for="date">Tanggal</label>
+                  <input id="date" name="date" type="date" min="0001-01-01" max="9999-12-31" required>
+                </div>
+                <div>
+                  <label for="category">Kategori</label>
+                  <select id="category" name="category"></select>
+                </div>
+              </div>
+              <label for="notes">Catatan <span class="optional">opsional</span></label>
+              <textarea id="notes" name="notes" rows="2" maxlength="500" placeholder="Untuk apa hari ini?"></textarea>
+              <button id="save" class="primary" type="submit">Simpan transaksi</button>
+              <button id="cancel" class="ghost-btn full" type="button" hidden>Batal mengubah</button>
+            </fieldset>
+          </form>
+        </section>
+
+        <section class="card export-panel">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Simpan &amp; tinjau kembali</p>
+              <h2>Catatan, milik Anda.</h2>
+            </div>
+          </div>
+          <button id="print" class="primary wide" type="button"><svg class="ic" aria-hidden="true"><use href="#ic-print"></use></svg> Cetak / simpan PDF</button>
+          <div class="export-pair">
+            <button id="csv" class="ghost-btn" type="button"><svg class="ic" aria-hidden="true"><use href="#ic-download"></use></svg> CSV bulan ini</button>
+            <button id="json" class="ghost-btn" type="button"><svg class="ic" aria-hidden="true"><use href="#ic-download"></use></svg> Backup JSON</button>
+          </div>
+          <button id="import" class="ghost-btn wide" type="button"><svg class="ic" aria-hidden="true"><use href="#ic-upload"></use></svg> Pulihkan dari backup</button>
+          <input id="import-file" type="file" accept="application/json,.json" hidden>
+          <p class="hint">PDF &amp; CSV: periode terpilih. JSON: semua bulan. Impor menambahkan transaksi dari backup — data yang ada tidak dihapus.</p>
+        </section>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<button id="add-btn" class="fab" type="button" aria-label="Tambah transaksi" hidden>
+  <svg class="ic" aria-hidden="true"><use href="#ic-plus"></use></svg>
+  <span>Tambah</span>
+</button>
+
+<footer class="site-foot">
+  <span>kantong — lebih sadar, lebih tenang.</span>
+  <span>Catatan pribadi. Bukan nasihat keuangan.</span>
+</footer>
+
+<noscript>Aktifkan JavaScript untuk menggunakan Kantong.</noscript>
+</body>
+</html>
