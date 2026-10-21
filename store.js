@@ -1,4 +1,4 @@
-import {validate} from './core.js';
+import {validate,categoryName,budgetAmount,monthBounds} from './core.js';
 export class DemoStore{
  constructor(storage=globalThis.localStorage){this.storage=storage;this.key='kantong.demo.v1';}
  async all(){const rows=JSON.parse(this.storage.getItem(this.key)||'[]');if(!Array.isArray(rows))throw Error('Data demo rusak. Hapus penyimpanan situs setelah mencadangkan.');return rows.sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));}
@@ -17,3 +17,19 @@ export class CloudStore{
  async remove(id){await this.ready();const data=await this.request(`/rest/v1/transactions?id=eq.${encodeURIComponent(id)}&user_id=eq.${encodeURIComponent(this.session.user.id)}`,{method:'DELETE',headers:{Prefer:'return=representation'}});if(!Array.isArray(data)||data.length!==1)throw Error('Transaksi tidak ditemukan atau tidak diizinkan.');}
  async request(path,options={},authenticated=true){let response;try{response=await this.fetcher(this.url+path,{...options,headers:{apikey:this.key,...(authenticated?{Authorization:`Bearer ${this.session?.access_token}`}:{}),'Content-Type':'application/json',...options.headers},signal:AbortSignal.timeout(20000)});}catch{throw Error('Jaringan tidak tersedia atau waktu habis. Coba lagi; periksa daftar sebelum mengulang simpan.');}const data=response.status===204?null:await response.json();if(!response.ok)throw Error(data?.message||data?.error_description||data?.msg||'Permintaan gagal.');return data;}
 }
+// Planning metadata has a separate demo key; never used as a cloud fallback.
+DemoStore.prototype.planning=async function(){return JSON.parse(this.storage.getItem('kantong.demo.planning.v3')||'{"categories":[],"budgets":[],"scenarios":[]}');};
+DemoStore.prototype.putPlanning=async function(table,row,keys,remove=false){const p=await this.planning();p[table]=p[table].filter(x=>!keys.every(k=>x[k]===row[k]));if(!remove)p[table].push(row);this.storage.setItem('kantong.demo.planning.v3',JSON.stringify(p));return row;};
+CloudStore.prototype.planning=async function(){await this.ready();const entries=await Promise.all([['categories','expense_categories','name'],['budgets','monthly_budgets','month,category'],['scenarios','improvement_scenarios','month']].map(async([key,table,order])=>{const rows=[];let offset=0;for(;;){const page=await this.request(`/rest/v1/${table}?select=*&user_id=eq.${encodeURIComponent(this.session.user.id)}&order=${order}&limit=1000&offset=${offset}`);if(!Array.isArray(page))throw Error('Data perencanaan tidak valid.');if(!page.length)break;rows.push(...page);offset+=page.length;}return [key,rows];}));return Object.fromEntries(entries);};
+CloudStore.prototype.putPlanning=async function(table,row,keys,remove=false){await this.ready();const db={categories:'expense_categories',budgets:'monthly_budgets',scenarios:'improvement_scenarios'}[table];const owner=this.session.user.id;const filter=['user_id',...keys].map(k=>`${k}=eq.${encodeURIComponent(k==='user_id'?owner:row[k])}`).join('&');
+ const data=await this.request(`/rest/v1/${db}?${remove?filter:'on_conflict='+['user_id',...keys].join(',')}`,{method:remove?'DELETE':'POST',headers:{Prefer:remove?'return=representation':'resolution=merge-duplicates,return=representation'},...(!remove?{body:JSON.stringify({...row,user_id:owner})}:{})});
+ if(!Array.isArray(data)||(!remove&&data.length!==1))throw Error('Perencanaan gagal disimpan.');
+ // Explicit readback verifies the exact metadata target after a write.
+ const check=await this.request(`/rest/v1/${db}?select=*&${filter}`);if(!Array.isArray(check)||(remove?check.length!==0:check.length!==1))throw Error('Simpan belum dapat diverifikasi. Muat ulang sebelum mengulang.');return remove?row:check[0];};
+for(const Store of [DemoStore,CloudStore]){
+ Store.prototype.setCategory=async function(name,enabled=true){return this.putPlanning('categories',{name:categoryName(name),enabled:!!enabled},['name']);};
+ Store.prototype.setBudget=async function(month,category,raw){monthBounds(month);const amount=budgetAmount(raw);return this.putPlanning('budgets',{month,category:categoryName(category),...(amount===null?{}:{amount})},['month','category'],amount===null);};
+ Store.prototype.setScenario=async function(month,income,proposed){monthBounds(month);const raw=String(income);if(!/^\d{1,100}$/.test(raw)||!proposed||Array.isArray(proposed)||typeof proposed!=='object')throw Error('Simulasi tidak valid.');const clean=Object.fromEntries(Object.entries(proposed).map(([k,v])=>{const n=budgetAmount(v);if(n===null)throw Error('Usulan wajib diisi.');return [categoryName(k),String(n)];}));return this.putPlanning('scenarios',{month,income:raw,proposed:clean},['month']);};
+}
+
+

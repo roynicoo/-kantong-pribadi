@@ -99,6 +99,23 @@
       </div>
     </div>
 
+    <nav class="view-tabs" aria-label="Tampilan buku keuangan">
+      <button type="button" data-view="summary" aria-pressed="true">Ringkasan</button>
+      <button type="button" data-view="transactions" aria-pressed="false">Transaksi</button>
+      <button type="button" data-view="budget" aria-pressed="false">Anggaran</button>
+      <button type="button" data-view="daily" aria-pressed="false">Rekap Harian</button>
+    </nav>
+    <button id="improvement-alert" class="ghost-btn planning-notice" type="button" hidden>Arus kas aktual minus · Buat improvement (simulasi opsional)</button>
+    <p id="planning-notice" class="planning-notice" role="status" hidden></p>
+    <section id="budget-panel" class="card sheet-panel" hidden>
+      <div class="card-head"><div><p class="eyebrow">Rencana bulanan · opsional</p><h2>Anggaran / aktual / gap</h2></div><button id="improvement-start" type="button" class="ghost-btn">Buat improvement</button></div>
+      <p class="hint">Kosong = belum dianggarkan; 0 = target nol. Gap = budget − aktual; negatif berarti terlampaui. Semua kategori pengeluaran boleh dipakai atau tidak.</p>
+      <p id="improvement-warning" class="planning-notice" hidden>Arus kas aktual bulan ini minus. Buat improvement untuk simulasi menekan anggaran, bukan mengubah pengeluaran yang sudah terjadi.</p>
+      <div class="sheet-scroll" tabindex="0" aria-label="Tabel anggaran"><table class="budget-table"><thead><tr><th>Kategori pengeluaran</th><th>Budget (Rp)</th><th>Actual</th><th>Gap</th><th>Aksi</th></tr></thead><tbody id="budget-rows"></tbody><tfoot id="budget-total"></tfoot></table></div>
+      <details class="category-manager"><summary>Kelola kategori pengeluaran</summary><p class="hint">Centang untuk pilihan transaksi baru. Menonaktifkan / mengganti nama tidak mengubah catatan lama. Andreas: dukungan adik; Ortu: bantuan tunai orang tua; UKT: kuliah adik. Semuanya pengeluaran opsional, bukan tabungan.</p><div id="category-options"></div><form id="category-form"><label for="category-name">Kategori baru</label><div class="inline-form"><input id="category-name" maxlength="50" placeholder="Contoh: Buku adik"><button id="category-add" type="submit" class="ghost-btn">Tambah kategori</button></div></form></details>
+      <section id="scenario-panel" hidden><h3>Improvement · simulasi saja</h3><p class="hint">Satu simulasi tersimpan per bulan. Tidak mengganti anggaran aktif atau transaksi. Bahkan untuk bulan lampau, proyeksi ini tidak mengubah sisa aktual. Baseline memakai budget; jika kosong memakai aktual (diberi label).</p><label for="scenario-income">Asumsi pemasukan (Rp) · boleh diubah</label><input id="scenario-income" type="text" inputmode="numeric"><p id="scenario-state" class="hint"></p><div class="sheet-scroll"><table><thead><tr><th>Kategori</th><th>Budget aktif</th><th>Aktual</th><th>Baseline / sumber</th><th>Usulan (Rp)</th><th>Pengurangan</th></tr></thead><tbody id="scenario-rows"></tbody></table></div><p id="scenario-totals"></p><button id="scenario-save" type="button" class="primary">Simpan simulasi terpisah</button></section>
+    </section>
+    <section id="daily-panel" class="card sheet-panel" hidden><p class="eyebrow">Seluruh pengeluaran bulan terpilih</p><h2>Rekap harian</h2><p class="hint">Geser tabel ke samping untuk semua kategori. Transaksi tanggal dan kategori sama dijumlahkan. Pemasukan tidak dihitung sebagai pengeluaran.</p><div id="daily-scroll" class="sheet-scroll" tabindex="0" aria-label="Geser rekap harian"><table id="daily-table"></table></div></section>
     <div class="summary">
       <article class="card balance-card">
         <div class="card-top">
@@ -263,18 +280,20 @@
             </div>
           </div>
           <button id="print" class="primary wide" type="button"><svg class="ic" aria-hidden="true"><use href="#ic-print"></use></svg> Cetak / simpan PDF</button>
+          <div class="report-exports"><button id="csv-budget" class="ghost-btn" type="button">CSV anggaran</button><button id="csv-daily" class="ghost-btn" type="button">CSV harian</button><button id="csv-scenario" class="ghost-btn" type="button">CSV improvement</button></div>
           <div class="export-pair">
             <button id="csv" class="ghost-btn" type="button"><svg class="ic" aria-hidden="true"><use href="#ic-download"></use></svg> CSV bulan ini</button>
             <button id="json" class="ghost-btn" type="button"><svg class="ic" aria-hidden="true"><use href="#ic-download"></use></svg> Backup JSON</button>
           </div>
           <button id="import" class="ghost-btn wide" type="button"><svg class="ic" aria-hidden="true"><use href="#ic-upload"></use></svg> Pulihkan dari backup</button>
           <input id="import-file" type="file" accept="application/json,.json" hidden>
-          <p class="hint">PDF &amp; CSV: periode terpilih. JSON: semua bulan. Impor menambahkan transaksi dari backup — data yang ada tidak dihapus.</p>
+          <p class="hint">PDF &amp; CSV: seluruh bulan terpilih, tanpa filter. JSON v2: semua bulan, transaksi, kategori, anggaran dan simulasi; tersedia setelah perencanaan dimuat. Impor menambah yang belum ada, tidak menimpa atau menghapus data.</p>
         </section>
       </aside>
     </div>
   </section>
 </main>
+<section id="print-report" aria-label="Laporan bulanan lengkap"></section>
 
 <button id="add-btn" class="fab" type="button" aria-label="Tambah transaksi" hidden>
   <svg class="ic" aria-hidden="true"><use href="#ic-plus"></use></svg>

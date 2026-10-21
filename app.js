@@ -1,4 +1,4 @@
-import { CATEGORIES, localDate, recap, validate, escapeHTML, toCSV, backup } from './core.js';
+import { CATEGORIES, localDate, recap, validate, escapeHTML, toCSV, backup, categoryName, budgetAmount, budgetRecap, dailyRecap, improvement, reportCSV } from './core.js';
 import { DemoStore, CloudStore } from './store.js';
 
 /* ============================================================
@@ -21,8 +21,9 @@ const state = {
   month: '',
   editing: null,
   loaded: false,
-  busy: false,
+  busy: false, loading:false,
   filters: { q: '', type: '', cat: '' },
+  planning: {categories:[],budgets:[],scenarios:[]}, planningReady:false, view:'summary', scenarioOpen:false, draft:null, generation:0,
 };
 
 /* ---------- utilitas tampilan ---------- */
@@ -84,16 +85,17 @@ function fillCategorySelect() {
   const sel = $('category');
   const type = document.querySelector('input[name="type"]:checked')?.value || 'expense';
   const keep = sel.value;
-  sel.innerHTML = CATEGORIES[type].map((c) => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
-  if (CATEGORIES[type].includes(keep)) sel.value = keep;
+  sel.innerHTML = entryCategories(type).map((c) => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+  if (entryCategories(type).includes(keep)) sel.value = keep;
 }
 function fillFilterCategories() {
-  const all = [...new Set([...CATEGORIES.expense, ...CATEGORIES.income])].sort((a, b) => a.localeCompare(b, 'id'));
+  const all = [...new Set([...expenseNames(), ...CATEGORIES.income])].sort((a, b) => a.localeCompare(b, 'id'));
   $('fcat').innerHTML = '<option value="">Semua kategori</option>' + all.map((c) => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
 }
 
 /* ---------- gerbang / konfigurasi ---------- */
 function showGate(message, { login = false } = {}) {
+  $('print-report').innerHTML='';
   $('gate').hidden = false;
   $('workspace').hidden = true;
   $('logout').hidden = true;
@@ -180,8 +182,10 @@ async function signIn(ev) {
 }
 
 async function signOut() {
+  if(state.busy||state.loading)return;
   const s = state.store;
   try { if (state.mode === 'cloud' && s) await s.signOut(); } catch { /* sesi lokal tetap dibersihkan */ }
+  state.generation++;state.planning={categories:[],budgets:[],scenarios:[]};state.planningReady=false;state.draft=null;state.scenarioOpen=false;
   state.all = []; state.loaded = false; state.editing = null; state.mode = null; state.store = null;
   closeSheet();
   resetForm();
@@ -209,27 +213,34 @@ async function enterWorkspace() {
 }
 
 function setButtons(enabled) {
-  const can = enabled && !state.busy;
-  for (const id of ['save', 'print', 'csv', 'json', 'import']) {
+  const can = enabled && !state.busy && !state.loading;
+  for(const id of ['refresh','logout','month','prev-month','next-month','this-month','demo'])$(id).disabled=state.busy||state.loading;
+  for(const el of $$('#budget-panel input,#budget-panel button'))el.disabled=!can||!state.planningReady;
+  for(const id of ['improvement-alert','csv-budget','csv-scenario','json'])$(id).disabled=!can||!state.planningReady;
+  $('csv-daily').disabled=!can;
+  for (const id of ['save', 'print', 'csv', 'import']) {
     const el = $(id);
     if (el) el.disabled = !can;
   }
 }
 
 async function load() {
+  if(state.busy||state.loading)return;state.loading=true;state.loaded=false;$('print-report').innerHTML='';
   setSync(state.mode === 'cloud' ? 'Cloud Supabase · memuat…' : 'Demo lokal · memuat…', 'warn');
   setButtons(false);
   try {
     const all = await state.store.all();
     state.all = Array.isArray(all) ? all : [];
     state.loaded = true;
+    await loadPlanning();
+    fillCategorySelect();fillFilterCategories();
     setSync(state.mode === 'cloud'
       ? `Cloud Supabase · dimuat ${state.all.length} transaksi`
       : 'Demo lokal · tidak tersinkron', state.mode === 'cloud' ? '' : 'demo');
-    render();
+    state.loading=false;render();
     setButtons(true);
   } catch (err) {
-    state.loaded = false;
+    state.loading=false;state.loaded = false;
     setSync('Data belum berhasil dimuat · laporan dan perubahan dinonaktifkan.', 'err');
     setButtons(false);
     $('rows').innerHTML = '';
@@ -253,6 +264,8 @@ function render() {
   renderDonut(r);
   renderTop(r);
   renderTable(r);
+  renderPlanning();
+  renderPrint();
   $('period-label').textContent = 'Periode ' + monthLabel(state.month);
 }
 function recapSafe(month) {
@@ -279,7 +292,7 @@ function renderSummary(r, prev) {
   const daysInMonth = new Date(Number(state.month.slice(0, 4)), Number(state.month.slice(5, 7)), 0).getDate();
   const now = localDate();
   const elapsed = now.slice(0, 7) === state.month ? Math.max(1, Number(now.slice(8, 10))) : daysInMonth;
-  $('daily-avg').textContent = r.expense > 0n ? rp(BigInt(Math.round(Number(r.expense) / elapsed))) : 'Rp 0';
+  $('daily-avg').textContent = r.expense > 0n ? rp(BigInt((r.expense+BigInt(Math.floor(elapsed/2)))/BigInt(elapsed))) : 'Rp 0';
 
   const nIn = r.rows.filter((t) => t.type === 'income').length;
   const nOut = r.rows.length - nIn;
@@ -292,9 +305,9 @@ function renderChart() {
   for (let i = 5; i >= 0; i--) months.push(shiftMonth(state.month, -i));
   const data = months.map((m) => {
     const r = recapSafe(m);
-    return { m, income: Number(r.income), expense: Number(r.expense) };
+    return { m, income: r.income, expense: r.expense };
   });
-  const max = Math.max(1, ...data.flatMap((d) => [d.income, d.expense]));
+  const max = Math.max(1, ...data.flatMap((d) => [Number(d.income), Number(d.expense)]));
   const W = 520, H = 186, padL = 6, padB = 26, top = 8;
   const slot = (W - padL * 2) / data.length;
   const bw = Math.min(15, slot * 0.28);
@@ -309,8 +322,8 @@ function renderChart() {
   svg += `<text class="axis" x="${W - padL}" y="${top + 9}" text-anchor="end">${rpShort(max)}</text>`;
   data.forEach((d, i) => {
     const cx = padL + slot * i + slot / 2;
-    const hi = Math.max(2, (d.income / max) * (baseY - top));
-    const ho = Math.max(2, (d.expense / max) * (baseY - top));
+    const hi = Math.max(2, (Number(d.income) / max) * (baseY - top));
+    const ho = Math.max(2, (Number(d.expense) / max) * (baseY - top));
     const label = MONTH_SHORT[Number(d.m.split('-')[1]) - 1];
     svg += `<g><title>${label} ${d.m.slice(0, 4)} — masuk ${rp(d.income)}, keluar ${rp(d.expense)}</title>`;
     svg += `<rect class="bar-in" x="${(cx - bw - gap / 2).toFixed(1)}" y="${(baseY - hi).toFixed(1)}" width="${bw}" height="${hi.toFixed(1)}" rx="3"/>`;
@@ -323,8 +336,8 @@ function renderChart() {
 
 const C = 2 * Math.PI * 72;
 function renderDonut(r) {
-  const entries = Object.entries(r.categories).map(([k, v]) => [k, Number(v)]).sort((a, b) => b[1] - a[1]);
-  const total = entries.reduce((a, [, v]) => a + v, 0);
+  const entries = Object.entries(r.categories).sort((a,b)=>a[1]===b[1]?0:a[1]>b[1]?-1:1);
+  const total = entries.reduce((a, [, v]) => a + v, 0n);
   if (!total) {
     $('categories').innerHTML = `<svg viewBox="0 0 200 200" role="presentation" aria-hidden="true"><circle cx="100" cy="100" r="72" fill="none" stroke="var(--line)" stroke-width="22"/><text x="100" y="96" text-anchor="middle" font-size="15" fill="var(--muted)">Belum ada</text><text x="100" y="116" text-anchor="middle" font-size="12" fill="var(--muted)">pengeluaran</text></svg>`;
     $('legend').innerHTML = '<li><span class="swatch" style="background:var(--line)"></span><span class="name">Belum ada pengeluaran</span><span class="val">—</span></li>';
@@ -333,19 +346,19 @@ function renderDonut(r) {
   let offset = 0;
   let svg = '<svg viewBox="0 0 200 200" role="presentation" aria-hidden="true"><g transform="rotate(-90 100 100)">';
   entries.forEach(([name, v], i) => {
-    const len = (v / total) * C;
+    const len = (Number(v) / Number(total)) * C;
     const color = PALETTE[i % PALETTE.length];
     svg += `<circle class="arc" cx="100" cy="100" r="72" stroke="${color}" stroke-dasharray="${(Math.max(0, len - 1.5)).toFixed(2)} ${(C - len + 1.5).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}"><title>${escapeHTML(name)} — ${rp(v)}</title></circle>`;
     offset += len;
   });
   svg += '</g></svg>';
   /* label tengah di luar grup yang diputar agar teks tetap tegak */
-  svg += `<div class="donut-center"><b>${rpShort(total)}</b><span>total keluar</span></div>`;
+  svg += `<div class="donut-center"><b>${rpShort(Number(total))}</b><span>total keluar</span></div>`;
   $('categories').innerHTML = `<div class="donut-stack">${svg}</div>`;
   $('legend').innerHTML = entries.map(([name, v], i) => `
     <li><span class="swatch" style="background:${PALETTE[i % PALETTE.length]}"></span>
     <span class="name">${escapeHTML(name)}</span>
-    <span class="val">${Math.round((v / total) * 100)}% · ${rp(v)}</span></li>`).join('');
+    <span class="val">${Math.round((Number(v) / Number(total)) * 100)}% · ${rp(v)}</span></li>`).join('');
 }
 
 function renderTop(r) {
@@ -411,9 +424,10 @@ function resetForm() {
 }
 
 function startEdit(id) {
+  if(state.busy||state.loading||!state.loaded)return;
   const t = state.all.find((x) => x.id === id);
   if (!t) return;
-  openSheet();
+  openSheet();setFormMode(id);
   document.querySelector(`input[name="type"][value="${t.type}"]`).checked = true;
   fillCategorySelect();
   $('amount').value = String(t.amount);
@@ -435,7 +449,7 @@ async function submitEntry(ev) {
     payload = validate({
       type: document.querySelector('input[name="type"]:checked')?.value,
       category: $('category').value,
-      amount: digits($('amount').value),
+      amount: $('amount').value,
       date: $('date').value,
       notes: $('notes').value,
     });
@@ -515,14 +529,13 @@ function exportCSV() {
   notify('CSV periode ini diunduh.');
 }
 function exportJSON() {
-  if (!state.all.length) { notify('Belum ada transaksi untuk dicadangkan.', true); return; }
-  download(`kantong-backup-${localDate()}.json`, backup(state.all), 'application/json');
+  if(!state.planningReady)return;
+  download(`kantong-backup-${localDate()}.json`, backup(state.all,state.planning), 'application/json');
   notify('Backup seluruh bulan diunduh.');
 }
 function printReport() {
   if (!state.loaded) return;
-  const r = currentRecap();
-  if (!r.rows.length) notify('Belum ada transaksi pada periode ini.', true);
+  renderPrint();
   $('period-label').textContent = 'Periode ' + monthLabel(state.month);
   window.print();
 }
@@ -541,6 +554,11 @@ async function importBackup(file) {
   const list = Array.isArray(data) ? data : Array.isArray(data?.transactions) ? data.transactions : null;
   if (!list) { notify('Struktur backup tidak dikenali.', true); return; }
 
+  if(state.busy)return;
+  const meta=data?.version===2?{categories:data.categories||[],budgets:data.budgets||[],scenarios:data.scenarios||[]}:{categories:[],budgets:[],scenarios:[]};
+  if(!Object.values(meta).every(Array.isArray)){notify('Metadata backup tidak valid.',true);return;}
+  if(Object.values(meta).some(a=>a.length)&&!state.planningReady){notify('Muat perencanaan / migrasi dahulu agar backup lengkap dapat dipulihkan.',true);return;}
+  if(!confirm(`Pratinjau impor: ${list.length} transaksi, ${meta.categories.length} kategori, ${meta.budgets.length} anggaran, ${meta.scenarios.length} simulasi. Data duplikat dilewati (termasuk kunci kategori/bulan). Tidak ada penghapusan atau penimpaan. Lanjutkan?`))return;
   const existing = new Set(state.all.map((t) => `${t.date}|${t.type}|${t.category}|${t.amount}|${t.notes || ''}`));
   let added = 0, skipped = 0, failed = 0;
   state.busy = true; setButtons(false);
@@ -557,8 +575,14 @@ async function importBackup(file) {
         added++;
       } catch { failed++; }
     }
-    render();
-    notify(`${added} transaksi dipulihkan${skipped ? `, ${skipped} duplikat dilewati` : ''}${failed ? `, ${failed} gagal` : ''}.`, added === 0);
+    let metadataAdded=0,metadataSkipped=0;
+    for(const [kind,items] of Object.entries(meta))for(const item of items){
+      const duplicate=state.planning[kind].some(x=>kind==='categories'?x.name===item.name:kind==='budgets'?x.month===item.month&&x.category===item.category:x.month===item.month);
+      if(duplicate){metadataSkipped++;continue;}
+      try{if(kind==='categories'){if(typeof item.enabled!=='boolean')throw Error();await state.store.setCategory(item.name,item.enabled);}else if(kind==='budgets'){if(item.amount===null||item.amount===undefined)throw Error();await state.store.setBudget(item.month,item.category,item.amount);}else await state.store.setScenario(item.month,item.income,item.proposed);state.planning[kind].push(item);metadataAdded++;}catch{failed++;}
+    }
+    if(state.planningReady)await loadPlanning();fillCategorySelect();fillFilterCategories();render();
+    notify(`${added} transaksi dipulihkan${skipped ? `, ${skipped} duplikat dilewati` : ''}${failed ? `, ${failed} gagal` : ''}; ${metadataAdded} metadata ditambah, ${metadataSkipped} metadata duplikat dilewati.`, failed > 0);
   } finally {
     state.busy = false; setButtons(true);
   }
@@ -566,6 +590,7 @@ async function importBackup(file) {
 
 /* ---------- pemasangan peristiwa ---------- */
 function wire() {
+  wirePlanning();
   $('theme').addEventListener('click', () => {
     applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
   });
@@ -581,9 +606,8 @@ function wire() {
 
   $('entry').addEventListener('submit', submitEntry);
   $('cancel').addEventListener('click', () => { resetForm(); closeSheet(); notify('Perubahan dibatalkan.'); });
-  $('amount').addEventListener('input', (e) => {
-    e.target.value = digits(e.target.value);
-  });
+  // Do not turn -12, 1.5 or 1e3 into a different financial amount.
+
 
   document.querySelectorAll('input[name="type"]').forEach((r) => r.addEventListener('change', () => {
     fillCategorySelect();
@@ -598,16 +622,16 @@ function wire() {
   });
 
   $('month').addEventListener('input', () => {
-    if ($('month').value) { state.month = $('month').value; render(); }
+    if ($('month').value) { state.month = $('month').value; state.draft=null; render(); }
   });
   $('prev-month').addEventListener('click', () => {
-    state.month = shiftMonth(state.month, -1); $('month').value = state.month; render();
+    state.month = shiftMonth(state.month, -1); $('month').value = state.month; state.draft=null; render();
   });
   $('next-month').addEventListener('click', () => {
-    state.month = shiftMonth(state.month, 1); $('month').value = state.month; render();
+    state.month = shiftMonth(state.month, 1); $('month').value = state.month; state.draft=null; render();
   });
   $('this-month').addEventListener('click', () => {
-    state.month = localDate().slice(0, 7); $('month').value = state.month; render();
+    state.month = localDate().slice(0, 7); $('month').value = state.month; state.draft=null; render();
   });
 
   $('refresh').addEventListener('click', load);
@@ -666,6 +690,74 @@ function wire() {
     if (e.key === '/' && !$('workspace').hidden) { e.preventDefault(); $('search').focus(); }
     if (e.key.toLowerCase() === 'n' && !$('workspace').hidden) { e.preventDefault(); openSheet(); $('amount').focus(); }
   });
+}
+
+/* ---------- feuille de budget: shared cloud metadata, never a local fallback ---------- */
+function expenseNames(){return [...new Set([...CATEGORIES.expense,...state.planning.categories.map(c=>c.name),...state.all.filter(t=>t.type==='expense').map(t=>t.category),...state.planning.budgets.map(b=>b.category)])];}
+function entryCategories(type){if(type==='income')return CATEGORIES.income;if(state.mode==='cloud'&&!state.planningReady)return [...new Set(['Makan','Transportasi','Belanja','Tagihan','Kesehatan','Hiburan','Lainnya',...state.all.filter(t=>t.type==='expense').map(t=>t.category)])];const editing=state.all.find(t=>t.id===state.editing)?.category;return expenseNames().filter(n=>n===editing||state.planning.categories.find(c=>c.name===n)?.enabled!==false);}
+function budgetRows(){return budgetRecap(state.all,state.month,state.planning.budgets,expenseNames());}
+async function loadPlanning(){
+ state.planningReady=false;state.planning={categories:[],budgets:[],scenarios:[]};
+ try{const p=await state.store.planning();if(!p.categories.every(c=>typeof c.name==='string'&&typeof c.enabled==='boolean')||!p.budgets.every(b=>typeof b.month==='string'&&b.amount!==undefined)||!p.scenarios.every(s=>s.proposed&&typeof s.income==='string'))throw Error('Format tabel tidak cocok.');state.planning=p;state.planningReady=true;$('planning-notice').hidden=true;}
+ catch(e){$('planning-notice').hidden=false;$('planning-notice').textContent='Perencanaan cloud belum tersedia. Jalankan hanya migration-v3.sql sekali (jangan ulang schema.sql), lalu Muat ulang. Transaksi lama tetap dapat dipakai. Jika sudah migrasi, periksa jaringan / izin. '+e.message;}
+}
+function setView(view){state.view=view;$$('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));$('workspace').dataset.view=view;$('budget-panel').hidden=view!=='budget';$('daily-panel').hidden=view!=='daily';}
+function dailyHTML(d,cats=d.categories,print=false){const sum=day=>cats.reduce((s,c)=>s+day.categories[c],0n);return `<thead><tr><th>Tanggal</th>${cats.map(c=>`<th>${escapeHTML(c)}</th>`).join('')}<th>${print?'Subtotal kolom':'Total harian'}</th>${print?'<th>Total harian (semua)</th>':''}</tr></thead><tbody>${d.days.map(day=>`<tr><th>${day.date}</th>${cats.map(c=>`<td>${rp(day.categories[c])}</td>`).join('')}<td>${rp(sum(day))}</td>${print?`<td>${rp(day.total)}</td>`:''}</tr>`).join('')}</tbody><tfoot><tr><th>Total bulan</th>${cats.map(c=>`<td>${rp(d.totals[c])}</td>`).join('')}<td>${rp(cats.reduce((s,c)=>s+d.totals[c],0n))}</td>${print?`<td>${rp(d.total)}</td>`:''}</tr></tfoot>`;}
+function renderPlanning(){
+ const rows=budgetRows();$('budget-rows').innerHTML=rows.map(r=>`<tr><th>${escapeHTML(r.category)}${state.planning.categories.find(c=>c.name===r.category)?.enabled===false?' <small>(nonaktif)</small>':''}</th><td><input aria-label="Budget ${escapeHTML(r.category)}" data-budget="${escapeHTML(r.category)}" inputmode="numeric" type="text" placeholder="Belum dianggarkan" value="${r.budget??''}"></td><td>${rp(r.actual)}</td><td class="${r.gap!==null&&r.gap<0n?'negative':''}">${r.gap===null?'—':rp(r.gap)}</td><td><button type="button" class="ghost-btn" data-save-budget="${escapeHTML(r.category)}">Simpan</button></td></tr>`).join('');
+ const set=rows.filter(r=>r.budget!==null);const b=set.reduce((s,r)=>s+r.budget,0n),a=set.reduce((s,r)=>s+r.actual,0n);$('budget-total').innerHTML=`<tr><th>Subtotal ${set.length} kategori beranggaran</th><td>${rp(b)}</td><td>${rp(a)}</td><td>${rp(b-a)}</td><td></td></tr><tr><th>Aktual semua kategori</th><td colspan="4">${rp(currentRecap().expense)} · kategori tanpa budget tidak dianggap target nol</td></tr>`;
+ $('category-options').innerHTML=expenseNames().map(n=>`<div class="category-option"><label><input type="checkbox" data-category-enabled="${escapeHTML(n)}" ${state.planning.categories.find(c=>c.name===n)?.enabled===false?'':'checked'}>${escapeHTML(n)}</label><button class="ghost-btn" type="button" data-category-rename="${escapeHTML(n)}">Ganti nama</button></div>`).join('');
+ $('improvement-warning').hidden=currentRecap().balance>=0n;
+ $('improvement-alert').hidden=currentRecap().balance>=0n; $('improvement-alert').disabled=!state.planningReady||state.busy;
+ $('improvement-start').textContent=state.planning.scenarios.some(s=>s.month===state.month)?'Buka improvement':'Buat improvement';
+ $('daily-table').innerHTML=dailyHTML(dailyRecap(state.all,state.month,expenseNames()));
+ if(state.scenarioOpen)renderScenario();else $('scenario-panel').hidden=true;
+ setView(state.view);setButtons(state.loaded);
+}
+function renderScenario(){
+ $('scenario-panel').hidden=false;
+ if(!state.draft||state.draft.month!==state.month){const saved=state.planning.scenarios.find(s=>s.month===state.month);state.draft={month:state.month,income:saved?.income??currentRecap().income.toString(),proposed:{...(saved?.proposed||{})}};}
+ const d=state.draft;const s=improvement(budgetRows(),d.income,d.proposed);$('scenario-income').value=d.income;
+ $('scenario-rows').innerHTML=s.rows.map(r=>`<tr><th>${escapeHTML(r.category)}</th><td>${r.budget===null?'—':rp(r.budget)}</td><td>${rp(r.actual)}</td><td>${rp(r.baseline)} · ${r.source==='budget'?'budget':'aktual (tanpa budget)'}</td><td><input aria-label="Usulan ${escapeHTML(r.category)}" type="text" inputmode="numeric" data-proposal="${escapeHTML(r.category)}" value="${r.proposal}"></td><td data-reduction="${escapeHTML(r.category)}">${rp(r.reduction)}</td></tr>`).join('');
+ for(const r of s.rows)d.proposed[r.category]=r.proposal.toString();updateScenarioTotals();
+}
+function updateScenarioTotals(){try{const s=improvement(budgetRows(),state.draft.income,state.draft.proposed);$('scenario-totals').textContent=`Asumsi masuk ${rp(s.income)} · Total baseline ${rp(s.baseline)} · Total usulan ${rp(s.total)} · Pengurangan rencana ${rp(s.reduction)} · Proyeksi sisa ${rp(s.remaining)}. Bukan tabungan aktual.`;s.rows.forEach(r=>{const el=$$('[data-reduction]').find(e=>e.dataset.reduction===r.category);if(el)el.textContent=rp(r.reduction);});$('scenario-state').textContent='Pratinjau simulasi; klik Simpan untuk sinkronisasi. Tidak diterapkan ke anggaran aktif.';}catch(e){$('scenario-totals').textContent=e.message;}}
+async function planningAction(action,message){
+ if(!state.loaded||!state.planningReady||state.busy)return;state.busy=true;setButtons(false);const store=state.store,gen=state.generation;
+ try{await action(store);if(store!==state.store||gen!==state.generation)return;await loadPlanning();if(!state.planningReady)throw Error('Perubahan belum dapat dimuat ulang. Periksa sebelum mengulang.');fillCategorySelect();fillFilterCategories();render();notify(message);}
+ catch(e){notify(e.message,true);}finally{state.busy=false;setButtons(state.loaded);}
+}
+function scenarioSaved(){const saved=state.planning.scenarios.find(s=>s.month===state.month);return saved?improvement(budgetRows(),saved.income,saved.proposed):null;}
+function exportPlanning(kind){
+ if(!state.loaded)return;let headers,rows;
+ if(kind==='budget'){headers=['bulan','kategori','budget_idr_kosong_tanpa_target','actual_idr','gap_budget_minus_actual_idr'];rows=budgetRows().map(r=>[state.month,r.category,r.budget,r.actual,r.gap]);}
+ if(kind==='daily'){const d=dailyRecap(state.all,state.month,expenseNames());headers=['tanggal',...d.categories,'total_pengeluaran_idr'];rows=d.days.map(r=>[r.date,...d.categories.map(c=>r.categories[c]),r.total]);rows.push(['TOTAL BULAN',...d.categories.map(c=>d.totals[c]),d.total]);}
+ if(kind==='scenario'){const s=scenarioSaved();if(!s){notify('Belum ada simulasi tersimpan untuk bulan ini.',true);return;}headers=['bulan','cakupan','kategori','sumber_baseline','baseline_idr','actual_idr','usulan_idr','pengurangan_rencana_idr','asumsi_masuk_idr','total_usulan_idr','proyeksi_sisa_idr'];rows=s.rows.map(r=>[state.month,'simulasi bukan aktual',r.category,r.source,r.baseline,r.actual,r.proposal,r.reduction,s.income,s.total,s.remaining]);}
+ download(`kantong-${kind}-${state.month}.csv`,reportCSV(headers,rows),'text/csv;charset=utf-8');
+}
+function plainTable(headers,rows,cls=''){return `<table class="${cls}"><thead><tr>${headers.map(h=>`<th>${escapeHTML(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${escapeHTML(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;}
+function renderPrint(){
+ if(!state.loaded){$('print-report').innerHTML='';return;}const r=currentRecap(),d=dailyRecap(state.all,state.month,expenseNames());
+ let html=`<h1>Kantong · ${escapeHTML(monthLabel(state.month))}</h1><p>Periode ${state.month} · seluruh bulan, tanpa filter pencarian/jenis/kategori.</p><p>Aktual pemasukan ${rp(r.income)} · pengeluaran ${rp(r.expense)} · sisa ${rp(r.balance)} (arus kas, bukan saldo rekening / tabungan).</p><h2>Budget / Actual / Gap</h2>`;
+ html+=state.planningReady?plainTable(['Kategori','Budget','Actual','Gap'],budgetRows().map(x=>[x.category,x.budget===null?'Belum dianggarkan':rp(x.budget),rp(x.actual),x.gap===null?'—':rp(x.gap)])):'<p>Perencanaan belum dimuat; budget/simulasi tidak tersedia. Ini bukan laporan perencanaan lengkap.</p>';
+ html+='<h2>Rekap harian pengeluaran</h2><p>Kategori dibagi per kelompok kolom. Subtotal hanya kelompok ini; total bulanan seluruh kategori '+rp(d.total)+'.</p>';
+ for(let i=0;i<d.categories.length;i+=5)html+='<table>'+dailyHTML(d,d.categories.slice(i,i+5),true)+'</table>';
+ const s=state.planningReady?scenarioSaved():null;if(s){html+=`<h2>Simulasi improvement · terpisah, bukan aktual</h2><p>Asumsi masuk ${rp(s.income)} · baseline ${rp(s.baseline)} · usulan ${rp(s.total)} · pengurangan rencana ${rp(s.reduction)} · proyeksi sisa ${rp(s.remaining)}. Tidak mengubah transaksi atau anggaran aktif, termasuk bulan lampau.</p>`+plainTable(['Kategori','Sumber','Baseline','Aktual','Usulan','Pengurangan'],s.rows.map(x=>[x.category,x.source,rp(x.baseline),rp(x.actual),rp(x.proposal),rp(x.reduction)]));}
+ html+='<h2>Seluruh transaksi periode ini</h2>'+plainTable(['Tanggal','Jenis','Kategori','Nominal','Catatan'],r.rows.map(t=>[t.date,t.type,t.category,rp(t.amount),t.notes||'—']),'print-transactions');$('print-report').innerHTML=html;
+}
+function wirePlanning(){
+ $('improvement-alert').addEventListener('click',()=>{setView('budget');state.scenarioOpen=true;renderScenario();setButtons(state.loaded);});
+ $$('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+ $('category-form').addEventListener('submit',e=>{e.preventDefault();const n=$('category-name').value;planningAction(s=>s.setCategory(n,true),'Kategori tersimpan.');});
+ $('category-options').addEventListener('change',e=>{const n=e.target.dataset.categoryEnabled;if(n)planningAction(s=>s.setCategory(n,e.target.checked),'Kategori tersimpan.');});
+ $('category-options').addEventListener('click',e=>{const n=e.target.dataset.categoryRename;if(!n)return;const raw=prompt('Nama baru (catatan dan anggaran lama tidak diganti; nama lama dinonaktifkan):',n);if(!raw||raw===n)return;let name;try{name=categoryName(raw);}catch(err){notify(err.message,true);return;}planningAction(async s=>{await s.setCategory(name,true);await s.setCategory(n,false);},'Kategori tersimpan.');});
+ $('budget-rows').addEventListener('click',e=>{const n=e.target.dataset.saveBudget;if(!n)return;const input=$$('[data-budget]').find(i=>i.dataset.budget===n),month=state.month;planningAction(s=>s.setBudget(month,n,input.value),'Anggaran tersimpan.');});
+ $('improvement-start').addEventListener('click',()=>{state.scenarioOpen=true;renderScenario();setButtons(state.loaded);});
+ $('scenario-income').addEventListener('input',e=>{state.draft.income=e.target.value;updateScenarioTotals();});
+ $('scenario-rows').addEventListener('input',e=>{if(!e.target.dataset.proposal)return;state.draft.proposed[e.target.dataset.proposal]=e.target.value;updateScenarioTotals();});
+ $('scenario-save').addEventListener('click',()=>{const d=state.draft;planningAction(s=>s.setScenario(d.month,d.income,d.proposed),'Simulasi tersimpan. Anggaran aktif dan transaksi tidak berubah.');});
+ for(const kind of ['budget','daily','scenario'])$('csv-'+kind).addEventListener('click',()=>exportPlanning(kind));
+ window.addEventListener('beforeprint',renderPrint);
 }
 
 /* ---------- mulai ---------- */

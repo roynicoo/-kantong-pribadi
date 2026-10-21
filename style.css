@@ -507,6 +507,43 @@ html[data-theme="dark"] .fab { color: #071310; }
   .ledger, .body-grid { gap: 0; }
 }
 
+/* ---------------- feuille v3 ---------------- */
+.view-tabs {display:flex;gap:6px;border-bottom:1px solid var(--line);margin:0 0 22px;overflow-x:auto;padding-bottom:10px}
+.view-tabs button {white-space:nowrap;border:0;background:transparent;padding:12px 18px;color:var(--ink);font-weight:600;min-height:44px;cursor:pointer;border-radius:8px}
+.view-tabs button[aria-pressed=true] {background:var(--teal);color:#fff}
+.sheet-panel {margin-bottom:22px;min-width:0}
+.sheet-scroll {max-width:100%;overflow:auto;border:1px solid var(--line);border-radius:8px;margin:16px 0}
+.sheet-scroll table {width:max-content;min-width:100%;display:table;border-collapse:collapse;white-space:nowrap;font-variant-numeric:tabular-nums}
+.sheet-scroll thead{display:table-header-group}.sheet-scroll tbody{display:table-row-group}.sheet-scroll tfoot{display:table-footer-group}.sheet-scroll tr{display:table-row}.sheet-scroll td,.sheet-scroll th{display:table-cell}.sheet-scroll td::before{display:none}
+.sheet-scroll th,.sheet-scroll td {padding:10px 14px;text-align:right;border-bottom:1px solid var(--line)}
+.sheet-scroll th:first-child {text-align:left;background:var(--card)}
+.sheet-scroll input {min-width:150px;width:160px;margin:0;min-height:44px}
+.sheet-scroll tfoot {font-weight:700;background:var(--paper-2)}
+.negative {color:var(--out);font-weight:700}
+.planning-notice {padding:14px;background:var(--out-soft);color:var(--out);border-radius:8px;margin:16px 0}
+.category-manager {margin:22px 0}.category-manager summary{cursor:pointer;min-height:44px;padding:12px 0;font-weight:700}
+#category-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.category-option {display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);gap:8px}
+.category-option label{display:flex;align-items:center;gap:8px;margin:0;min-height:44px}.category-option input{width:18px;height:18px;min-height:18px;margin:0}
+.inline-form{display:flex;align-items:center;gap:8px}.inline-form input{flex:1;min-width:0;margin:0}
+#scenario-panel{border-top:1px solid var(--line);margin-top:22px;padding-top:22px}#scenario-income{max-width:260px}
+#scenario-totals{font-weight:600;line-height:1.9}.report-exports{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+#print-report {display:none}
+#workspace[data-view=transactions]>.summary,#workspace[data-view=transactions]>.insights,#workspace[data-view=transactions] .top-expenses {display:none}
+#workspace[data-view=budget]>.summary,#workspace[data-view=budget]>.insights,#workspace[data-view=daily]>.summary,#workspace[data-view=daily]>.insights {display:none}
+#workspace[data-view=budget] .ledger,#workspace[data-view=daily] .ledger {display:none}
+#workspace[data-view=budget] .body-grid,#workspace[data-view=daily] .body-grid {grid-template-columns:1fr}
+#workspace[data-view=budget] .side,#workspace[data-view=daily] .side {display:block}
+#workspace[data-view=budget] .entry-panel,#workspace[data-view=daily] .entry-panel{display:none}
+@media(max-width:700px){.view-tabs button{padding:10px 12px}.sheet-panel .card-head{flex-wrap:wrap;gap:12px}.category-option{font-size:13px}.sheet-panel{padding:16px}.inline-form{flex-wrap:wrap}.sheet-open #workspace .entry-panel{display:block}#workspace[data-view=budget] .side,#workspace[data-view=daily] .side{max-width:100%}}
+@media print {
+ body>main,body>.topbar,body>.site-foot,body>.fab {display:none!important}
+ #print-report{display:block!important;color:#111;background:#fff;font:11pt Georgia,serif}
+ #print-report h1{font-size:22pt}#print-report h2{font-size:15pt;margin-top:8mm;break-after:avoid}
+ #print-report table{font-size:9pt;table-layout:auto;margin:4mm 0 8mm;border-collapse:collapse;break-inside:auto}
+ #print-report th,#print-report td{padding:1.8mm!important;border:1px solid #ccc;color:#111!important;white-space:normal;overflow-wrap:anywhere;text-align:left}
+ #print-report tr{break-inside:avoid}#print-report p{font-size:11pt;line-height:1.4}
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
