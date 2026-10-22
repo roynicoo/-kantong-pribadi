@@ -37,6 +37,10 @@
   </a>
   <p class="tagline">Ruang kecil untuk rencana besar.</p>
   <div class="account">
+    <button id="profile-btn" class="profile-btn" type="button" aria-haspopup="dialog" aria-controls="profile" aria-label="Buka profil, sapaan, dan tampilan">
+      <span id="avatar" class="avatar" aria-hidden="true">R</span>
+      <span id="greeting" class="greeting">Hi, …</span>
+    </button>
     <span id="identity" class="identity"></span>
     <button id="theme" class="icon-btn" type="button" aria-label="Ganti tema" title="Ganti tema terang/gelap">
       <svg class="ic ic-sun" aria-hidden="true"><use href="#ic-sun"></use></svg>
@@ -80,11 +84,115 @@
 
   <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
 
+  <!-- ============ PANDUAN AWAL (v4) ============ -->
+  <section id="onboarding" class="onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title" hidden>
+    <div class="onboarding-card">
+      <p class="eyebrow" id="onboarding-step-label">Langkah 1 dari 4</p>
+      <h2 id="onboarding-title">Mau mulai kelola uang?</h2>
+      <p id="onboarding-lede" class="onboarding-lede">Tiga langkah singkat: saldo awal, pemasukan rutin, lalu mulai mencatat. Semua bisa diubah nanti.</p>
+
+      <div class="onb-step" data-step="1">
+        <p class="hint">Kantong mencatat pemasukan dan pengeluaran sebagai arus kas pribadi. Tidak ada rekening bank yang terhubung dan tidak ada data yang dibagikan.</p>
+        <div class="onb-actions">
+          <button id="onb-start" class="primary" type="button">Mulai</button>
+          <button id="onb-later" class="ghost-btn" type="button">Nanti</button>
+        </div>
+        <p class="hint">Memilih “Nanti” tidak mengunci aplikasi. Anda tetap bisa mencatat, dan pengingat untuk menyelesaikan panduan tetap tersedia.</p>
+      </div>
+
+      <form id="onb-accounts-form" class="onb-step" data-step="2" novalidate>
+        <p class="hint">Uangmu sekarang di mana? Buat akun pertama (mis. BCA atau Tunai) dan isi saldonya hari ini. Boleh menambah beberapa akun.</p>
+        <div id="onb-account-list" class="onb-account-list"></div>
+        <button id="onb-add-account" class="ghost-btn" type="button">Tambah akun lain</button>
+        <p class="hint">Angka ini hanya untuk menghitung saldo menurut catatan Anda, bukan saldo rekening bank yang diverifikasi.</p>
+        <div class="onb-actions">
+          <button id="onb-accounts-next" class="primary" type="submit">Lanjut</button>
+          <button id="onb-accounts-skip" class="ghost-btn" type="button">Belum tahu, nanti saja</button>
+        </div>
+      </form>
+
+      <form id="onb-schedule-form" class="onb-step" data-step="3" novalidate hidden>
+        <p class="hint">Gaji atau pemasukan tetap? Isi sekali, Kantong mencatatnya otomatis setiap bulan (satu kali per bulan, termasuk bulan yang terlewat).</p>
+        <label for="onb-name">Nama pemasukan</label>
+        <input id="onb-name" maxlength="50" placeholder="Gaji rutin" autocomplete="off">
+        <div class="form-pair">
+          <div><label for="onb-amount">Nominal (Rp)</label><input id="onb-amount" inputmode="numeric" pattern="[0-9]*" placeholder="5000000"></div>
+          <div><label for="onb-day">Tanggal masuk</label><input id="onb-day" inputmode="numeric" pattern="[0-9]*" value="25" placeholder="1–31"></div>
+        </div>
+        <div class="form-pair">
+          <div><label for="onb-sched-start">Mulai bulan</label><input id="onb-sched-start" type="month" min="0001-01" max="9998-12"></div>
+          <div><label for="onb-category">Kategori</label><select id="onb-category"></select></div>
+        </div>
+        <p class="hint">Tanggal 31 pada bulan pendek memakai hari terakhir bulan itu. Bisa diubah atau dijeda nanti di tab Rutin.</p>
+        <div class="onb-actions">
+          <button id="onb-schedule-save" class="primary" type="submit">Simpan &amp; lanjut</button>
+          <button id="onb-schedule-skip" class="ghost-btn" type="button">Belum ada pemasukan rutin</button>
+        </div>
+      </form>
+
+      <div class="onb-step" data-step="4" hidden>
+        <ul id="onb-summary" class="onb-summary"></ul>
+        <p class="hint">Semua pengaturan ini bisa diubah kapan saja di tab <b>Rutin</b> → Saldo awal &amp; panduan.</p>
+        <div class="onb-actions">
+          <button id="onb-finish" class="primary" type="button">Masuk ke dashboard</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROFIL & TAMPILAN (v4) ============ -->
+  <section id="profile" class="onboarding profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-title" hidden>
+    <div class="onboarding-card profile-card">
+      <div class="card-head">
+        <div><p class="eyebrow">Profil &amp; tampilan</p><h2 id="profile-title">Hi, …</h2></div>
+        <button id="profile-close" class="icon-btn" type="button" aria-label="Tutup profil"><svg class="ic" aria-hidden="true"><use href="#ic-close"></use></svg></button>
+      </div>
+      <div class="profile-preview">
+        <span id="profile-avatar" class="avatar lg" aria-hidden="true">R</span>
+        <div class="profile-meta"><b id="profile-name-preview">…</b><small id="profile-email"></small></div>
+      </div>
+      <form id="profile-form" novalidate>
+        <label for="profile-name">Nama pengguna <span class="optional">2–24 karakter</span></label>
+        <input id="profile-name" maxlength="24" autocomplete="nickname" aria-describedby="profile-name-help">
+        <p id="profile-name-help" class="hint">Dipakai untuk sapaan “Hi, …”. Boleh huruf, angka, spasi, titik, garis bawah, tanda hubung. Email tetap untuk masuk dan tidak diubah di sini.</p>
+
+        <fieldset class="swatch-field">
+          <legend>Warna avatar</legend>
+          <div id="avatar-colors" class="swatches"></div>
+        </fieldset>
+        <fieldset class="swatch-field">
+          <legend>Foto avatar <span class="optional">opsional</span></legend>
+          <div class="avatar-actions">
+            <input id="avatar-file" type="file" accept="image/jpeg,image/webp" class="sr-only">
+            <button id="avatar-upload" class="ghost-btn" type="button">Pilih foto…</button>
+            <button id="avatar-remove" class="ghost-btn" type="button" hidden>Hapus foto</button>
+          </div>
+          <p class="hint">JPEG/WebP, dipotong persegi 256&nbsp;px lalu dikompres otomatis. Maksimal 100&nbsp;KB. Tanpa Supabase Storage, foto disimpan sebagai data pribadi di baris pengaturan Anda — bukan tautan publik. Bila gagal dikompres, foto tidak disimpan dan Anda melihat pesan galat.</p>
+        </fieldset>
+
+        <fieldset class="swatch-field">
+          <legend>Tema warna</legend>
+          <div id="theme-swatches" class="swatches"></div>
+        </fieldset>
+        <fieldset class="swatch-field">
+          <legend>Latar halus</legend>
+          <div id="pattern-swatches" class="swatches"></div>
+        </fieldset>
+        <p id="profile-status" class="hint" role="status"></p>
+        <div class="onb-actions">
+          <button id="profile-save" class="primary" type="submit">Simpan profil</button>
+          <button id="profile-reset" class="ghost-btn" type="button">Atur ulang tampilan</button>
+        </div>
+        <p class="hint">Tersimpan di akun, jadi ponsel dan laptop memakai nama, avatar, dan tema yang sama. Mode gelap tetap terpisah dan tersimpan di perangkat ini.</p>
+      </form>
+    </div>
+  </section>
+
   <!-- ============ RUANG KERJA ============ -->
   <section id="workspace" hidden>
     <div class="ws-head">
       <div>
-        <p class="eyebrow">Buku keuangan Anda</p>
+        <p class="eyebrow" id="dash-greeting">Buku keuangan Anda</p>
         <h1>Setiap rupiah, bercerita.</h1>
         <p id="sync" class="sync"></p>
       </div>
@@ -99,14 +207,29 @@
       </div>
     </div>
 
+    <div id="onboarding-banner" class="onboarding-banner" role="status" hidden>
+      <p><b>Panduan awal belum selesai.</b> Atur saldo awal dan pemasukan rutin agar “Saldo saat ini” akurat.</p>
+      <div class="onboarding-banner-actions">
+        <button id="onb-banner-open" class="ghost-btn" type="button">Lanjutkan</button>
+        <button id="onb-banner-close" class="icon-btn" type="button" aria-label="Tutup pengingat panduan"><svg class="ic" aria-hidden="true"><use href="#ic-close"></use></svg></button>
+      </div>
+    </div>
+
     <nav class="view-tabs" aria-label="Tampilan buku keuangan">
       <button type="button" data-view="summary" aria-pressed="true">Ringkasan</button>
       <button type="button" data-view="transactions" aria-pressed="false">Transaksi</button>
       <button type="button" data-view="budget" aria-pressed="false">Anggaran</button>
       <button type="button" data-view="daily" aria-pressed="false">Rekap Harian</button>
+      <button type="button" data-view="recurring" aria-pressed="false">Rutin</button>
+      <button type="button" data-view="accounts" aria-pressed="false">Akun</button>
     </nav>
     <button id="improvement-alert" class="ghost-btn planning-notice" type="button" hidden>Arus kas aktual minus · Buat improvement (simulasi opsional)</button>
     <p id="planning-notice" class="planning-notice" role="status" hidden></p>
+    <div id="v4-notice" class="planning-notice notice-dismissible" role="status" hidden>
+      <span id="v4-notice-text"></span>
+      <button id="v4-notice-close" class="icon-btn" type="button" aria-label="Tutup pemberitahuan migrasi v4"><svg class="ic" aria-hidden="true"><use href="#ic-close"></use></svg></button>
+    </div>
+    <p id="autopost-notice" class="planning-notice" role="status" hidden></p>
     <section id="budget-panel" class="card sheet-panel" hidden>
       <div class="card-head"><div><p class="eyebrow">Rencana bulanan · opsional</p><h2>Anggaran / aktual / gap</h2></div><button id="improvement-start" type="button" class="ghost-btn">Buat improvement</button></div>
       <p class="hint">Kosong = belum dianggarkan; 0 = target nol. Gap = budget − aktual; negatif berarti terlampaui. Semua kategori pengeluaran boleh dipakai atau tidak.</p>
@@ -116,7 +239,195 @@
       <section id="scenario-panel" hidden><h3>Improvement · simulasi saja</h3><p class="hint">Satu simulasi tersimpan per bulan. Tidak mengganti anggaran aktif atau transaksi. Bahkan untuk bulan lampau, proyeksi ini tidak mengubah sisa aktual. Baseline memakai budget; jika kosong memakai aktual (diberi label).</p><label for="scenario-income">Asumsi pemasukan (Rp) · boleh diubah</label><input id="scenario-income" type="text" inputmode="numeric"><p id="scenario-state" class="hint"></p><div class="sheet-scroll"><table><thead><tr><th>Kategori</th><th>Budget aktif</th><th>Aktual</th><th>Baseline / sumber</th><th>Usulan (Rp)</th><th>Pengurangan</th></tr></thead><tbody id="scenario-rows"></tbody></table></div><p id="scenario-totals"></p><button id="scenario-save" type="button" class="primary">Simpan simulasi terpisah</button></section>
     </section>
     <section id="daily-panel" class="card sheet-panel" hidden><p class="eyebrow">Seluruh pengeluaran bulan terpilih</p><h2>Rekap harian</h2><p class="hint">Geser tabel ke samping untuk semua kategori. Transaksi tanggal dan kategori sama dijumlahkan. Pemasukan tidak dihitung sebagai pengeluaran.</p><div id="daily-scroll" class="sheet-scroll" tabindex="0" aria-label="Geser rekap harian"><table id="daily-table"></table></div></section>
+    <section id="recurring-panel" class="card sheet-panel" hidden>
+      <div class="card-head">
+        <div><p class="eyebrow">Otomatis, tetap terkendali</p><h2>Pemasukan rutin</h2></div>
+        <button id="schedule-new" class="ghost-btn" type="button">Tambah jadwal</button>
+      </div>
+      <p class="hint">Untuk gaji atau pemasukan tetap. Bila tanggalnya sudah lewat, Kantong mencatat satu kali per bulan — termasuk bulan yang terlewat sejak bulan mulai. Tanggal 31 pada bulan pendek memakai hari terakhir. Mengubah jadwal hanya memengaruhi pencatatan berikutnya; baris yang sudah tercatat tetap bisa diubah atau dihapus seperti transaksi biasa.</p>
+      <p id="recurring-notice" class="hint" role="status"></p>
+      <div class="sheet-scroll" tabindex="0" aria-label="Daftar jadwal pemasukan rutin">
+        <table class="schedule-table">
+          <thead><tr><th>Jadwal</th><th>Nominal</th><th>Periode</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody id="schedule-rows"></tbody>
+        </table>
+      </div>
+      <form id="schedule-form" novalidate hidden>
+        <h3 id="schedule-form-title">Tambah jadwal</h3>
+        <label for="sched-name">Nama pemasukan</label>
+        <input id="sched-name" maxlength="50" placeholder="Gaji rutin" autocomplete="off">
+        <div class="form-pair">
+          <div><label for="sched-amount">Nominal (Rp)</label><input id="sched-amount" inputmode="numeric" pattern="[0-9]*" placeholder="5000000"></div>
+          <div><label for="sched-day">Tanggal masuk (1–31)</label><input id="sched-day" inputmode="numeric" pattern="[0-9]*" placeholder="25"></div>
+        </div>
+        <div class="form-pair">
+          <div><label for="sched-start">Mulai bulan</label><input id="sched-start" type="month" min="0001-01" max="9998-12"></div>
+          <div><label for="sched-end">Berhenti bulan <span class="optional">opsional</span></label><input id="sched-end" type="month" min="0001-01" max="9998-12"></div>
+        </div>
+        <div class="form-pair">
+          <div><label for="sched-category">Kategori</label><select id="sched-category"></select></div>
+          <div class="sched-active-field"><label for="sched-active">Status</label><label class="checkline" for="sched-active"><input id="sched-active" type="checkbox" checked> Aktif (catat otomatis)</label></div>
+        </div>
+        <label for="sched-notes">Catatan <span class="optional">opsional</span></label>
+        <input id="sched-notes" maxlength="500" placeholder="Contoh: gaji bulanan kantor">
+        <div class="onb-actions">
+          <button id="sched-save" class="primary" type="submit">Simpan jadwal</button>
+          <button id="sched-cancel" class="ghost-btn" type="button">Batal</button>
+        </div>
+        <p class="hint">Baris otomatis memakai catatan “Otomatis · nama jadwal” dan bisa dicari seperti transaksi lain.</p>
+      </form>
+
+      <section id="settings-panel">
+        <h3>Saldo awal &amp; panduan</h3>
+        <p class="hint">Saldo awal dipakai untuk “Saldo saat ini”: saldo awal + seluruh pemasukan − seluruh pengeluaran tercatat. Bukan saldo rekening bank dan bukan tabungan.</p>
+        <form id="opening-form" novalidate>
+          <label for="opening-balance">Saldo awal (Rp)</label>
+          <div class="inline-form">
+            <input id="opening-balance" inputmode="numeric" pattern="[0-9]*" placeholder="0">
+            <button id="opening-save" class="ghost-btn" type="submit">Simpan saldo awal</button>
+          </div>
+        </form>
+        <p id="opening-date" class="hint"></p>
+        <button id="rerun-onboarding" class="ghost-btn" type="button">Jalankan ulang panduan awal</button>
+      </section>
+    </section>
+
+    <section id="accounts-panel" class="card sheet-panel" hidden>
+      <div class="card-head">
+        <div><p class="eyebrow">Dompet, bank, e-wallet, investasi</p><h2>Akun &amp; Aset</h2></div>
+        <div class="panel-actions">
+          <button id="account-new" class="ghost-btn" type="button">Tambah akun</button>
+          <button id="transfer-new" class="ghost-btn" type="button">Pindah dana</button>
+        </div>
+      </div>
+      <p class="hint">Saldo akun = saldo awal + pemasukan − pengeluaran + pindah dana masuk − keluar. Investasi memakai nilai manual (rincian aset atau nilai kini); <b>tidak ada feed harga pasar</b>. Pindah dana tidak pernah dihitung pemasukan/pengeluaran atau mengubah anggaran.</p>
+      <div id="asset-totals" class="asset-totals"></div>
+      <p id="accounts-notice" class="planning-notice" role="status" hidden></p>
+      <div id="account-cards" class="account-grid"></div>
+
+      <form id="account-form" hidden novalidate>
+        <h3 id="account-form-title">Tambah akun</h3>
+        <label for="acc-name">Nama akun</label>
+        <input id="acc-name" maxlength="40" placeholder="BCA" autocomplete="off">
+        <div class="form-pair">
+          <div><label for="acc-type">Jenis</label><select id="acc-type"></select></div>
+          <div><label for="acc-opening">Saldo awal (Rp)</label><input id="acc-opening" inputmode="numeric" pattern="[0-9]*" placeholder="0"></div>
+        </div>
+        <div class="form-pair">
+          <div><label for="acc-color">Warna</label><select id="acc-color"></select></div>
+          <div><label for="acc-current">Nilai kini (khusus investasi, manual)</label><input id="acc-current" inputmode="numeric" pattern="[0-9]*" placeholder="0"></div>
+        </div>
+        <label for="acc-note">Catatan <span class="optional">opsional</span></label>
+        <input id="acc-note" maxlength="200" placeholder="Mis. rekening gaji">
+        <p id="acc-warning" class="hint" hidden>Mengubah saldo awal akan menghitung ulang saldo akun ini. Riwayat transaksi tidak diubah.</p>
+        <div class="onb-actions">
+          <button id="acc-save" class="primary" type="submit">Simpan akun</button>
+          <button id="acc-cancel" class="ghost-btn" type="button">Batal</button>
+        </div>
+      </form>
+
+      <form id="transfer-form" hidden novalidate>
+        <h3 id="transfer-form-title">Pindah dana</h3>
+        <p class="hint">Memindahkan uang antar akun sendiri. Bukan pemasukan, bukan pengeluaran.</p>
+        <div class="form-pair">
+          <div><label for="tr-from">Dari akun</label><select id="tr-from"></select></div>
+          <div><label for="tr-to">Ke akun</label><select id="tr-to"></select></div>
+        </div>
+        <div class="form-pair">
+          <div><label for="tr-amount">Nominal (Rp)</label><input id="tr-amount" inputmode="numeric" pattern="[0-9]*" placeholder="0"></div>
+          <div><label for="tr-date">Tanggal</label><input id="tr-date" type="date"></div>
+        </div>
+        <label for="tr-note">Catatan <span class="optional">opsional</span></label>
+        <input id="tr-note" maxlength="200" placeholder="Mis. tarik tunai">
+        <div class="onb-actions">
+          <button id="tr-save" class="primary" type="submit">Simpan pindah dana</button>
+          <button id="tr-cancel" class="ghost-btn" type="button">Batal</button>
+        </div>
+      </form>
+
+      <div class="sheet-scroll" tabindex="0" aria-label="Riwayat pindah dana">
+        <table>
+          <thead><tr><th>Pindah dana</th><th>Nominal</th><th>Tanggal</th><th>Aksi</th></tr></thead>
+          <tbody id="transfer-rows"></tbody>
+        </table>
+      </div>
+
+      <section id="investment-detail" hidden>
+        <div class="card-head"><div><p class="eyebrow">Investasi · nilai manual</p><h3 id="inv-title">—</h3></div><button id="inv-close" class="ghost-btn" type="button">Tutup</button></div>
+        <p id="inv-meta" class="hint"></p>
+        <div class="sheet-scroll" tabindex="0" aria-label="Rincian aset investasi">
+          <table>
+            <thead><tr><th>Nama aset</th><th>Jenis</th><th>Jumlah</th><th>Harga beli rata-rata</th><th>Harga kini (manual)</th><th>Nilai</th><th>Aksi</th></tr></thead>
+            <tbody id="holding-rows"></tbody>
+          </table>
+        </div>
+        <div class="onb-actions">
+          <button id="holding-new" class="ghost-btn" type="button">Tambah aset</button>
+          <button id="holding-save-all" class="primary" type="button">Simpan perubahan</button>
+        </div>
+        <p id="holding-dirty" class="hint" hidden>Ada perubahan belum disimpan.</p>
+        <p class="hint">Nilai investasi = jumlah (jumlah × harga kini). P/L = nilai − biaya beli. Harga diisi manual oleh Anda, bukan kutipan pasar.</p>
+        <div class="value-update">
+          <label for="inv-value">Perbarui nilai kini akun (manual)</label>
+          <div class="inline-form"><input id="inv-value" inputmode="numeric" pattern="[0-9]*" placeholder="0"><button id="inv-value-save" class="ghost-btn" type="button">Perbarui nilai</button></div>
+          <label for="inv-note">Catatan nilai <span class="optional">opsional</span></label>
+          <input id="inv-note" maxlength="200" placeholder="Mis. perkiraan akhir bulan">
+        </div>
+        <h4>Riwayat perubahan nilai</h4>
+        <div class="sheet-scroll"><table><thead><tr><th>Tanggal</th><th>Nilai</th><th>Perubahan</th><th>Catatan</th><th>Aksi</th></tr></thead><tbody id="valuation-rows"></tbody></table></div>
+        <div id="inv-chart" class="mini-chart"></div>
+      </section>
+
+      <section id="bulk-values" hidden>
+        <div class="card-head"><div><p class="eyebrow">Sekali layar</p><h3>Perbarui nilai semua akun investasi</h3></div></div>
+        <p class="hint">Isi nilai kini terbaru menurut catatan Anda. Hanya baris yang berubah yang disimpan. Harga manual, bukan feed pasar.</p>
+        <div class="sheet-scroll"><table><thead><tr><th>Akun</th><th>Nilai sekarang</th><th>Nilai baru</th><th>Catatan</th><th>Status</th></tr></thead><tbody id="bulk-rows"></tbody></table></div>
+        <div class="onb-actions">
+          <button id="bulk-save" class="primary" type="button">Simpan nilai yang berubah</button>
+          <button id="bulk-close" class="ghost-btn" type="button">Tutup</button>
+        </div>
+        <p id="bulk-status" class="hint"></p>
+      </section>
+
+      <details id="activity-log" class="category-manager">
+        <summary>Riwayat perubahan (50 terakhir)</summary>
+        <ul id="activity-rows" class="activity-list"></ul>
+      </details>
+      <div class="report-exports">
+        <button id="csv-accounts" class="ghost-btn" type="button">CSV akun</button>
+        <button id="csv-holdings" class="ghost-btn" type="button">CSV aset</button>
+        <button id="csv-transfers" class="ghost-btn" type="button">CSV pindah dana</button>
+        <button id="bulk-open" class="ghost-btn" type="button">Perbarui nilai investasi</button>
+      </div>
+    </section>
     <div class="summary">
+      <article class="card saldo-card" id="saldo-card">
+        <div class="saldo-main">
+          <p class="eyebrow">Kas tersedia menurut catatan</p>
+          <h2>Saldo saat ini</h2>
+          <p id="saldo" class="figure">—</p>
+          <p class="card-note">Saldo awal + seluruh pemasukan − seluruh pengeluaran yang tercatat, dari semua bulan. Ini kas menurut catatan Anda — bukan saldo rekening bank atau tabungan.</p>
+          <p class="card-foot" id="saldo-foot">Saldo awal: —</p>
+        </div>
+        <div class="saldo-months">
+          <table>
+            <caption class="sr">Arus kas dan saldo akhir per bulan</caption>
+            <thead><tr><th>Bulan</th><th class="number">Masuk</th><th class="number">Keluar</th><th class="number">Saldo akhir</th></tr></thead>
+            <tbody id="saldo-months"></tbody>
+          </table>
+        </div>
+      </article>
+      <article class="card aset-card" id="aset-card" hidden>
+        <div class="aset-figures">
+          <div><p class="card-top">Uang siap pakai</p><h3 id="aset-ready" class="figure small">—</h3><p class="card-note">Tunai + bank + e-wallet menurut catatan Anda.</p></div>
+          <div><p class="card-top">Total aset</p><h3 id="aset-total" class="figure small">—</h3><p class="card-note">Termasuk investasi dengan nilai manual. Bukan valuasi pasar real-time.</p></div>
+        </div>
+        <div class="aset-charts">
+          <div class="mini-block"><p class="eyebrow">Alokasi per jenis akun</p><div id="aset-donut" class="mini-donut" role="img" aria-label="Alokasi aset per jenis akun"></div></div>
+          <div class="mini-block"><p class="eyebrow">Riwayat nilai investasi</p><div id="aset-history" class="mini-chart"></div></div>
+        </div>
+        <button id="aset-open" class="ghost-btn" type="button">Kelola akun &amp; aset</button>
+      </article>
       <article class="card balance-card">
         <div class="card-top">
           <p>Sisa bulan ini</p>
@@ -244,6 +555,10 @@
             <button type="button" data-q-type="expense" data-q-cat="Belanja" data-q-amount="50000" data-q-note="Belanja harian">Belanja</button>
             <button type="button" data-q-type="expense" data-q-cat="Tagihan" data-q-amount="100000" data-q-note="Tagihan">Tagihan</button>
           </div>
+          <div class="quick quick-date" id="quick-date" aria-label="Tanggal cepat">
+            <button type="button" data-quickdate="0">Hari ini</button>
+            <button type="button" data-quickdate="1">Kemarin</button>
+          </div>
 
           <form id="entry" novalidate>
             <fieldset id="entry-fields">
@@ -263,6 +578,15 @@
                   <label for="category">Kategori</label>
                   <select id="category" name="category"></select>
                 </div>
+              </div>
+              <small id="date-hint" class="hint">Boleh tanggal lampau. Tanggal setelah hari ini ditolak.</small>
+              <div id="account-field" hidden>
+                <label for="account">Akun</label>
+                <div class="inline-form">
+                  <select id="account"></select>
+                  <button id="open-transfer" class="ghost-btn" type="button">Pindah dana</button>
+                </div>
+                <small class="hint">Pindah dana antar akun tidak dihitung pemasukan/pengeluaran.</small>
               </div>
               <label for="notes">Catatan <span class="optional">opsional</span></label>
               <textarea id="notes" name="notes" rows="2" maxlength="500" placeholder="Untuk apa hari ini?"></textarea>
@@ -287,7 +611,7 @@
           </div>
           <button id="import" class="ghost-btn wide" type="button"><svg class="ic" aria-hidden="true"><use href="#ic-upload"></use></svg> Pulihkan dari backup</button>
           <input id="import-file" type="file" accept="application/json,.json" hidden>
-          <p class="hint">PDF &amp; CSV: seluruh bulan terpilih, tanpa filter. JSON v2: semua bulan, transaksi, kategori, anggaran dan simulasi; tersedia setelah perencanaan dimuat. Impor menambah yang belum ada, tidak menimpa atau menghapus data.</p>
+          <p class="hint">PDF &amp; CSV: seluruh bulan terpilih, tanpa filter. PDF memuat saldo berjalan dan ringkasan pemasukan rutin. JSON v3: semua bulan, transaksi, kategori, anggaran, simulasi, jadwal rutin dan pengaturan saldo awal (v1/v2 tetap bisa dipulihkan). Impor menambah yang belum ada, tidak menimpa atau menghapus data.</p>
         </section>
       </aside>
     </div>
