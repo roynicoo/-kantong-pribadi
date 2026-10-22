@@ -271,6 +271,55 @@ export function usernameFromEmail(email) {
   const cleaned = local.replace(/[^A-Za-z0-9 ._-]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 24);
   return cleaned.length >= 2 ? cleaned : 'Pengguna';
 }
+/* ---------- WhatsApp: nomor & status tautan ---------- */
+export const WA_PHONE_RE = /^628[0-9]{8,11}$/;
+/* 08xx / +62xx / 62xx / spasi / tanda hubung -> 628xxxxxxxxx */
+export function normalizeWaPhone(raw) {
+  const digits = String(raw ?? '').replace(/\D/g, '');
+  if (!digits) throw Error('Nomor WhatsApp wajib diisi.');
+  let n = digits;
+  if (n.startsWith('0')) n = `62${n.slice(1)}`;
+  else if (n.startsWith('8')) n = `62${n}`;
+  else if (n.startsWith('620')) n = `62${n.slice(3)}`;
+  if (!WA_PHONE_RE.test(n)) throw Error('Nomor WhatsApp Indonesia tidak valid. Contoh: 081233434573.');
+  return n;
+}
+export function waPhonePretty(phone) {
+  const s = String(phone ?? '');
+  if (!WA_PHONE_RE.test(s)) return s;
+  return `0${s.slice(2)}`;
+}
+const WA_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+function waStamp(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return `${d.getDate()} ${WA_MONTHS[d.getMonth()]} ${d.getFullYear()} ${hh}:${mm}`;
+}
+export function waLinkStatusText(link, now = new Date()) {
+  if (!link) return 'Belum terhubung. Catatan dari WhatsApp belum masuk ke akun ini.';
+  if (!link.verified_at) {
+    return link.phone_e164
+      ? `Menunggu verifikasi untuk ${waPhonePretty(link.phone_e164)}.`
+      : 'Menunggu verifikasi.';
+  }
+  const seen = link.last_seen_at ? new Date(link.last_seen_at) : null;
+  if (!seen || Number.isNaN(seen.getTime())) return `Terhubung · ${waPhonePretty(link.phone_e164)} · belum pernah dipakai.`;
+  const minutes = Math.floor(Math.max(0, now.getTime() - seen.getTime()) / 60000);
+  if (minutes < 1) return `Terhubung · ${waPhonePretty(link.phone_e164)} · terakhir dipakai barusan.`;
+  if (minutes < 60) return `Terhubung · ${waPhonePretty(link.phone_e164)} · terakhir dipakai ${minutes} menit lalu.`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `Terhubung · ${waPhonePretty(link.phone_e164)} · terakhir dipakai ${hours} jam lalu.`;
+  return `Terhubung · ${waPhonePretty(link.phone_e164)} · terakhir dipakai ${waStamp(link.last_seen_at)}.`;
+}
+export function waCodeExpiryText(expiresAt, now = new Date()) {
+  const end = new Date(expiresAt);
+  if (Number.isNaN(end.getTime())) return '';
+  const left = Math.ceil((end.getTime() - now.getTime()) / 60000);
+  if (left <= 0) return 'Kode sudah kedaluwarsa. Tekan Hubungkan lagi untuk kode baru.';
+  return `Kode berlaku ${left} menit lagi.`;
+}
 export function greetingText(name, hour = new Date().getHours()) {
   const h = Number(hour);
   const period = h >= 4 && h < 11 ? 'Selamat pagi' : h >= 11 && h < 15 ? 'Selamat siang' : h >= 15 && h < 19 ? 'Selamat sore' : 'Selamat malam';

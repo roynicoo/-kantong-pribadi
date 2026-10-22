@@ -178,6 +178,25 @@
           <legend>Latar halus</legend>
           <div id="pattern-swatches" class="swatches"></div>
         </fieldset>
+        <fieldset class="swatch-field wa-link-field">
+          <legend>WhatsApp <span class="optional">opsional</span></legend>
+          <p id="wa-link-state" class="hint">Belum terhubung. Catatan dari WhatsApp belum masuk ke akun ini.</p>
+          <label for="wa-phone">Nomor WhatsApp</label>
+          <input id="wa-phone" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="081233434573" aria-describedby="wa-phone-help">
+          <p id="wa-phone-help" class="hint">Satu nomor hanya untuk satu akun. Format 08xx, +62xx, atau 62xx. Nomor yang masih dipakai di aplikasi WhatsApp biasa harus dilepas dulu.</p>
+          <div class="avatar-actions">
+            <button id="wa-connect" class="ghost-btn" type="button">Hubungkan</button>
+            <button id="wa-unlink" class="ghost-btn" type="button" hidden>Putuskan</button>
+          </div>
+          <div id="wa-code-box" class="wa-code-box" hidden>
+            <p class="hint">Kirim pesan ini dari WhatsApp nomor tersebut ke bot:</p>
+            <p><b id="wa-code" class="wa-code">······</b></p>
+            <button id="wa-code-copy" class="ghost-btn" type="button">Salin kode</button>
+            <p id="wa-code-expiry" class="hint"></p>
+          </div>
+          <p id="wa-status" class="hint" role="status"></p>
+        </fieldset>
+
         <p id="profile-status" class="hint" role="status"></p>
         <div class="onb-actions">
           <button id="profile-save" class="primary" type="submit">Simpan profil</button>

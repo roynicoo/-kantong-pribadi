@@ -39,7 +39,7 @@ for(const Store of [DemoStore,CloudStore]){
    Data demo memakai kunci terpisah dari cloud; tidak ada fallback diam-diam.
    ============================================================ */
 export { autoPost } from './core.js';
-import { normalizeSettings, validateSchedule, openingAmount, avatarDataError, validateAccount, validateTransfer, validateHolding, valuationPlan, validateActivity, latestValuation } from './core.js';
+import { normalizeSettings, validateSchedule, openingAmount, avatarDataError, validateAccount, validateTransfer, validateHolding, valuationPlan, validateActivity, latestValuation, normalizeWaPhone } from './core.js';
 
 const DEMO_V4 = 'kantong.demo.v4';
 const emptyV4 = () => ({ settings: { onboarding_completed: false, onboarding_skipped: false, opening_balance: 0, opening_balance_date: null }, schedules: [], postings: [], accounts: [], transfers: [], holdings: [], valuations: [], activity: [] });
@@ -62,6 +62,13 @@ DemoStore.prototype.commitV4 = async function (fn) {
   return next;
 };
 DemoStore.prototype.settings = async function () { return normalizeSettings((await this.v4()).settings); };
+DemoStore.prototype.waLink = async function () { return null; };
+DemoStore.prototype.requestWaCode = async function () {
+  throw Error('Verifikasi WhatsApp butuh akun online. Mode demo hanya menyimpan di browser ini.');
+};
+DemoStore.prototype.unlinkWa = async function () {
+  throw Error('Mode demo tidak punya tautan WhatsApp.');
+};
 DemoStore.prototype.saveSettings = async function (patch = {}) {
   if (patch.avatar_kind === 'photo' && patch.avatar_data) avatarDataError(patch.avatar_data);
   let saved;
@@ -165,6 +172,43 @@ CloudStore.prototype.saveSettings = async function (patch = {}) {
   if (!Array.isArray(check) || check.length !== 1) throw Error('Simpan pengaturan belum dapat diverifikasi. Muat ulang sebelum mengulang.');
   return normalizeSettings(check[0]);
 };
+/* ============================================================
+   WhatsApp: tautan nomor <-> akun.
+   Satu nomor hanya untuk satu akun (dijaga unique index di database).
+   Kode verifikasi ditulis lewat fungsi security definer; aplikasi hanya
+   membaca barisnya sendiri.
+   ============================================================ */
+CloudStore.prototype.waLink = async function () {
+  await this.ready();
+  const data = await this.request(`/rest/v1/wa_links?select=*&user_id=eq.${encodeURIComponent(this.session.user.id)}`);
+  if (!Array.isArray(data)) throw Error('Status WhatsApp tidak valid.');
+  if (data.length > 1) throw Error('Tautan WhatsApp ganda terdeteksi. Periksa database.');
+  return data[0] || null;
+};
+CloudStore.prototype.requestWaCode = async function (phone) {
+  const normalized = normalizeWaPhone(phone);
+  await this.ready();
+  let data;
+  try {
+    data = await this.request('/rest/v1/rpc/kantong_wa_request_code', { method: 'POST', body: JSON.stringify({ p_phone: normalized }) });
+  } catch (e) {
+    const msg = String((e && e.message) || '');
+    if (msg.includes('nomor_sudah_dipakai')) throw Error('Nomor ini sudah terhubung ke akun Kantong lain. Satu nomor hanya untuk satu akun.');
+    if (msg.includes('nomor_sudah_terhubung')) throw Error('Nomor ini sudah terhubung ke akun ini.');
+    if (msg.includes('nomor_tidak_valid')) throw Error('Nomor WhatsApp Indonesia tidak valid. Contoh: 081233434573.');
+    if (msg.includes('harus_masuk')) throw Error('Silakan masuk dulu untuk menghubungkan nomor.');
+    if (msg.includes('does not exist') || msg.includes('Could not find')) throw Error('Fitur WhatsApp belum aktif. Jalankan kantong-wa-migration.sql sekali, lalu muat ulang.');
+    throw Error('Kode verifikasi gagal dibuat. Coba lagi.');
+  }
+  if (!data || !data.code) throw Error('Kode verifikasi gagal dibuat. Coba lagi.');
+  return data;
+};
+CloudStore.prototype.unlinkWa = async function () {
+  await this.ready();
+  await this.request('/rest/v1/rpc/kantong_wa_unlink', { method: 'POST', body: JSON.stringify({}) });
+  return true;
+};
+
 CloudStore.prototype.schedules = async function () {
   await this.ready();
   const data = await this.request(`/rest/v1/income_schedules?select=*&user_id=eq.${encodeURIComponent(this.session.user.id)}&order=created_at.asc`);

@@ -3,7 +3,8 @@ import { CATEGORIES, localDate, recap, validate, escapeHTML, toCSV, backup, cate
   openingAmount, validateSchedule, scheduleStatusText, validateMonthString,
   validateUsername, usernameFromEmail, greetingText, avatarInitials, validateAvatarPhoto, avatarDataError, AVATAR_COLORS, THEMES, PATTERNS,
   validateAccount, validateTransfer, validateHolding, valuationPlan, accountBalance, assetTotals, allocationByType, investmentProfit,
-  valueHistory, defaultAccountId, latestValuation, ACCOUNT_TYPES, ACCOUNT_COLORS, HOLDING_KINDS } from './core.js';
+  valueHistory, defaultAccountId, latestValuation, ACCOUNT_TYPES, ACCOUNT_COLORS, HOLDING_KINDS,
+  normalizeWaPhone, waPhonePretty, waLinkStatusText, waCodeExpiryText } from './core.js';
 import { DemoStore, CloudStore } from './store.js';
 
 /* ============================================================
@@ -35,6 +36,7 @@ const state = {
   bannerDismissed: false, postErrors: [],
   accounts: [], transfers: [], holdings: [], valuations: [], activityRows: [],
   accountEditing: null, transferEditing: null, activeAccount: null, holdingDraft: [], onbAccounts: [],
+  waLink: null, waCode: null, waLoading: false,
 };
 
 /* ---------- utilitas tampilan ---------- */
@@ -1296,6 +1298,86 @@ function renderProfileForm() {
   $('avatar-colors').innerHTML = AVATAR_COLORS.map((c) => `<button type="button" class="avatar-choice" data-avatar-color="${c}" aria-label="Warna avatar ${c}" aria-pressed="${d.avatar_color === c}" style="background:${c}"></button>`).join('');
   $('theme-swatches').innerHTML = THEMES.map((t) => `<button type="button" class="choice" data-accent="${t.id}" aria-pressed="${d.theme === t.id}"><span class="dot-accent" style="background:${t.color}"></span>${t.label}</button>`).join('');
   $('pattern-swatches').innerHTML = PATTERNS.map((p) => `<button type="button" class="choice" data-pattern-choice="${p.id}" aria-pressed="${d.pattern === p.id}"><span class="pat pat-${p.id}"></span>${p.label}</button>`).join('');
+  renderWaSection();
+}
+
+/* ---------- WhatsApp: tautan nomor ---------- */
+function waStatus(message, error = false) {
+  const el = $('wa-status');
+  if (!el) return;
+  el.textContent = message;
+  el.classList.toggle('error', !!error);
+}
+function renderWaSection() {
+  if (!$('wa-link-state')) return;
+  const cloud = state.mode === 'cloud';
+  const link = state.waLink;
+  const verified = !!(link && link.verified_at);
+  $('wa-link-state').textContent = !cloud
+    ? 'Mode demo: tautan WhatsApp hanya tersedia untuk akun online.'
+    : state.waLoading
+      ? 'Memeriksa status nomor…'
+      : waLinkStatusText(link);
+  const input = $('wa-phone');
+  input.disabled = !cloud || state.busy;
+  if (document.activeElement !== input) input.value = link && link.phone_e164 ? waPhonePretty(link.phone_e164) : '';
+  $('wa-connect').disabled = !cloud || state.busy;
+  $('wa-connect').textContent = link ? 'Ganti nomor' : 'Hubungkan';
+  $('wa-unlink').hidden = !(cloud && link);
+  $('wa-unlink').disabled = state.busy;
+  const showCode = cloud && !!(state.waCode && state.waCode.code);
+  $('wa-code-box').hidden = !showCode;
+  if (showCode) {
+    $('wa-code').textContent = state.waCode.code;
+    $('wa-code-expiry').textContent = waCodeExpiryText(state.waCode.expires_at);
+  }
+}
+async function connectWa() {
+  if (state.mode !== 'cloud') { waStatus('Hubungkan nomor hanya tersedia untuk akun online.', true); return; }
+  if (!state.v4Ready) { waStatus('Fitur ini butuh kantong-wa-migration.sql dijalankan sekali.', true); return; }
+  if (state.busy) return;
+  let phone;
+  try { phone = normalizeWaPhone($('wa-phone').value); }
+  catch (e) { waStatus(e.message, true); $('wa-phone').focus(); return; }
+  state.busy = true; setButtons(false); renderWaSection();
+  try {
+    const result = await state.store.requestWaCode(phone);
+    state.waCode = result;
+    state.waLink = { user_id: state.store.session?.user?.id || null, phone_e164: result.phone_e164, verified_at: null, expires_at: result.expires_at, last_seen_at: null };
+    renderWaSection();
+    waStatus(`Kode dibuat. Kirim pesan VERIFIKASI ${result.code} dari WhatsApp ${waPhonePretty(result.phone_e164)} ke bot.`);
+  } catch (e) {
+    waStatus(e.message || 'Kode verifikasi gagal dibuat.', true);
+  } finally {
+    state.busy = false; setButtons(state.loaded); renderWaSection();
+  }
+}
+async function unlinkWa() {
+  if (state.mode !== 'cloud' || state.busy) return;
+  const number = state.waLink && state.waLink.phone_e164 ? waPhonePretty(state.waLink.phone_e164) : 'ini';
+  if (!globalThis.confirm(`Putuskan nomor ${number}? Catatan dari nomor itu berhenti masuk ke akun ini.`)) return;
+  state.busy = true; setButtons(false); renderWaSection();
+  try {
+    await state.store.unlinkWa();
+    state.waLink = null;
+    state.waCode = null;
+    waStatus('Nomor diputuskan. Catatan dari nomor itu tidak lagi masuk ke akun ini.');
+  } catch (e) {
+    waStatus(e.message || 'Gagal memutuskan nomor.', true);
+  } finally {
+    state.busy = false; setButtons(state.loaded); renderWaSection();
+  }
+}
+async function copyWaCode() {
+  const code = state.waCode && state.waCode.code;
+  if (!code) return;
+  const text = `VERIFIKASI ${code}`;
+  try {
+    await navigator.clipboard.writeText(text);
+    waStatus('Kode disalin. Tempel di WhatsApp lalu kirim ke bot.');
+  } catch {
+    waStatus(`Salin manual: ${text}`);
+  }
 }
 function openProfile() {
   if (!state.loaded) return;
@@ -1307,9 +1389,19 @@ function openProfile() {
     theme: state.settings?.theme || 'krem',
     pattern: state.settings?.pattern || 'none',
   };
+  state.waLink = null;
+  state.waCode = null;
+  state.waLoading = state.mode === 'cloud' && state.v4Ready;
   renderProfileForm();
   applyLook(state.profileDraft.theme, state.profileDraft.pattern);
   profileStatus('');
+  if (state.mode === 'cloud' && state.v4Ready) {
+    state.waLoading = true;
+    state.store.waLink()
+      .then((link) => { state.waLink = link; })
+      .catch(() => { state.waLink = null; })
+      .finally(() => { state.waLoading = false; renderWaSection(); });
+  }
   $('profile').hidden = false;
   document.body.classList.add('modal-open');
   $('profile-name').focus({ preventScroll: true });
@@ -1408,6 +1500,10 @@ function wireV4() {
   $('profile-close').addEventListener('click', closeProfile);
   $('profile-name').addEventListener('input', (e) => { if (state.profileDraft) state.profileDraft.display_name = e.target.value; });
   $('profile-form').addEventListener('submit', saveProfile);
+  $('wa-connect').addEventListener('click', connectWa);
+  $('wa-unlink').addEventListener('click', unlinkWa);
+  $('wa-code-copy').addEventListener('click', copyWaCode);
+  $('wa-phone').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); connectWa(); } });
   $('avatar-colors').addEventListener('click', (e) => {
     const c = e.target.closest('[data-avatar-color]')?.dataset.avatarColor;
     if (!c) return;

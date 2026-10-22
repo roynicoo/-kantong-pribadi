@@ -776,3 +776,23 @@ html[data-theme="dark"] .badge { color: var(--teal-ink); }
   .account .ghost-btn { padding: 8px 12px; }
   #workspace { padding-left: 12px; padding-right: 12px; }
 }
+
+/* ---------- WhatsApp: tautan nomor di Profil ---------- */
+.wa-link-field input { max-width: 260px; }
+.wa-code-box {
+  margin: 10px 0 6px;
+  padding: 12px 14px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card) 82%, transparent);
+}
+.wa-code {
+  display: inline-block;
+  margin: 2px 0 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1.45rem;
+  letter-spacing: .24em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.wa-link-field .hint.error { color: #b23a2a; }
