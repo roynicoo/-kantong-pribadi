@@ -1,0 +1,16 @@
+{
+  "name": "kantong-wa-bridge",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Bridge WhatsApp Cloud API + Telegram Bot API untuk Kantong v4 (serverless Vercel, tanpa dependensi).",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "test:tg": "node --test test/tg.test.mjs",
+    "simulate": "node test/simulate.mjs",
+    "simulate:tg": "node test/simulate-tg.mjs"
+  }
+}
