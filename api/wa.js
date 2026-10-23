@@ -1,11 +1,11 @@
 // Webhook WhatsApp Cloud API untuk Kantong.
 // GET  : verifikasi hub.challenge
 // POST : verifikasi X-Hub-Signature-256 atas body MENTAH, lalu proses pesan.
-import { verifyChallenge, verifySignature } from './lib/verify.js';
-import { createSupabase } from './lib/supabase.js';
-import { sendText } from './lib/send.js';
-import { handleMessage } from './lib/flow.js';
-import { normalizePhone } from './lib/parse.js';
+import { verifyChallenge, verifySignature } from '../lib/verify.js';
+import { createSupabase } from '../lib/supabase.js';
+import { sendText } from '../lib/send.js';
+import { handleMessage } from '../lib/flow.js';
+import { normalizePhone } from '../lib/parse.js';
 
 // Body mentah wajib: signature dihitung dari byte asli yang dikirim Meta.
 export const config = { api: { bodyParser: false } };

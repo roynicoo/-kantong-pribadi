@@ -2,10 +2,10 @@
 // POST saja: header X-Telegram-Bot-Api-Secret-Token wajib cocok dengan
 // TG_WEBHOOK_SECRET, lalu update diproses idempoten dan dibalas lewat
 // api.telegram.org. Tanpa dependensi, tanpa parse mode.
-import { verifySecretToken, readUpdate } from './lib/tg-verify.js';
-import { createSupabase } from './lib/supabase.js';
-import { sendTelegramText } from './lib/tg-send.js';
-import { handleTgMessage, tgConfig } from './lib/tg-flow.js';
+import { verifySecretToken, readUpdate } from '../lib/tg-verify.js';
+import { createSupabase } from '../lib/supabase.js';
+import { sendTelegramText } from '../lib/tg-send.js';
+import { handleTgMessage, tgConfig } from '../lib/tg-flow.js';
 
 async function readJsonBody(req) {
   if (Buffer.isBuffer(req.body)) {
