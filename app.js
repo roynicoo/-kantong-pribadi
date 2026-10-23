@@ -4,7 +4,7 @@ import { CATEGORIES, localDate, recap, validate, escapeHTML, toCSV, backup, cate
   validateUsername, usernameFromEmail, greetingText, avatarInitials, validateAvatarPhoto, avatarDataError, AVATAR_COLORS, THEMES, PATTERNS,
   validateAccount, validateTransfer, validateHolding, valuationPlan, accountBalance, assetTotals, allocationByType, investmentProfit,
   valueHistory, defaultAccountId, latestValuation, ACCOUNT_TYPES, ACCOUNT_COLORS, HOLDING_KINDS,
-  normalizeWaPhone, waPhonePretty, waLinkStatusText, waCodeExpiryText } from './core.js';
+  normalizeWaPhone, waPhonePretty, waLinkStatusText, waCodeExpiryText, tgLinkStatusText } from './core.js';
 import { DemoStore, CloudStore } from './store.js';
 
 /* ============================================================
@@ -37,6 +37,7 @@ const state = {
   accounts: [], transfers: [], holdings: [], valuations: [], activityRows: [],
   accountEditing: null, transferEditing: null, activeAccount: null, holdingDraft: [], onbAccounts: [],
   waLink: null, waCode: null, waLoading: false,
+  tgLink: null, tgCode: null, tgLoading: false,
 };
 
 /* ---------- utilitas tampilan ---------- */
@@ -1299,6 +1300,7 @@ function renderProfileForm() {
   $('theme-swatches').innerHTML = THEMES.map((t) => `<button type="button" class="choice" data-accent="${t.id}" aria-pressed="${d.theme === t.id}"><span class="dot-accent" style="background:${t.color}"></span>${t.label}</button>`).join('');
   $('pattern-swatches').innerHTML = PATTERNS.map((p) => `<button type="button" class="choice" data-pattern-choice="${p.id}" aria-pressed="${d.pattern === p.id}"><span class="pat pat-${p.id}"></span>${p.label}</button>`).join('');
   renderWaSection();
+  renderTgSection();
 }
 
 /* ---------- WhatsApp: tautan nomor ---------- */
@@ -1379,6 +1381,97 @@ async function copyWaCode() {
     waStatus(`Salin manual: ${text}`);
   }
 }
+
+/* ---------- Telegram: tautan chat ----------
+   Tidak ada nomor: chat baru dikenal setelah kode dikirim ke bot.
+   Bagian ini berdiri sendiri, tidak bergantung pada tautan WhatsApp. */
+function tgStatus(message, error = false) {
+  const el = $('tg-status');
+  if (!el) return;
+  el.textContent = message;
+  el.classList.toggle('error', !!error);
+}
+function renderTgSection() {
+  if (!$('tg-link-state')) return;
+  const cloud = state.mode === 'cloud';
+  const link = state.tgLink;
+  const verified = !!(link && link.verified_at);
+  $('tg-link-state').textContent = !cloud
+    ? 'Mode demo: tautan Telegram hanya tersedia untuk akun online.'
+    : state.tgLoading
+      ? 'Memeriksa status Telegram…'
+      : tgLinkStatusText(link);
+  $('tg-connect').disabled = !cloud || state.busy;
+  $('tg-connect').textContent = verified ? 'Hubungkan ulang' : 'Hubungkan Telegram';
+  $('tg-unlink').hidden = !(cloud && link);
+  $('tg-unlink').disabled = state.busy;
+  $('tg-check').hidden = !(cloud && !verified);
+  $('tg-check').disabled = state.busy || state.tgLoading;
+  const showCode = cloud && !!(state.tgCode && state.tgCode.code);
+  $('tg-code-box').hidden = !showCode;
+  if (showCode) {
+    $('tg-code').textContent = state.tgCode.code;
+    $('tg-code-expiry').textContent = waCodeExpiryText(state.tgCode.expires_at);
+  }
+}
+async function connectTg() {
+  if (state.mode !== 'cloud') { tgStatus('Hubungkan Telegram hanya tersedia untuk akun online.', true); return; }
+  if (!state.v4Ready) { tgStatus('Fitur ini butuh kantong-tg-migration.sql dijalankan sekali.', true); return; }
+  if (state.busy) return;
+  state.busy = true; setButtons(false); renderTgSection();
+  try {
+    const result = await state.store.requestTgCode();
+    state.tgCode = result;
+    state.tgLink = state.tgLink || { user_id: state.store.session?.user?.id || null, chat_id: null, verified_at: null };
+    renderTgSection();
+    tgStatus(`Kode dibuat. Buka bot Telegram Kantong, lalu kirim: verifikasi ${result.code}`);
+  } catch (e) {
+    tgStatus(e.message || 'Kode verifikasi gagal dibuat.', true);
+  } finally {
+    state.busy = false; setButtons(state.loaded); renderTgSection();
+  }
+}
+async function checkTg() {
+  if (state.mode !== 'cloud' || state.busy) return;
+  state.tgLoading = true; renderTgSection();
+  try {
+    state.tgLink = await state.store.tgLink();
+    renderTgSection();
+    tgStatus(state.tgLink && state.tgLink.verified_at
+      ? 'Chat Telegram sudah terhubung. Coba kirim: makan 1900'
+      : 'Belum terhubung. Kirim kode verifikasi dari Telegram ke bot, lalu cek lagi.');
+  } catch (e) {
+    tgStatus(e.message || 'Status Telegram gagal dibaca.', true);
+  } finally {
+    state.tgLoading = false; renderTgSection();
+  }
+}
+async function unlinkTg() {
+  if (state.mode !== 'cloud' || state.busy) return;
+  if (!globalThis.confirm('Putuskan chat Telegram ini? Catatan dari chat itu berhenti masuk ke akun ini.')) return;
+  state.busy = true; setButtons(false); renderTgSection();
+  try {
+    await state.store.unlinkTg();
+    state.tgLink = null;
+    state.tgCode = null;
+    tgStatus('Chat Telegram diputuskan. Catatan dari chat itu tidak lagi masuk ke akun ini.');
+  } catch (e) {
+    tgStatus(e.message || 'Gagal memutuskan chat Telegram.', true);
+  } finally {
+    state.busy = false; setButtons(state.loaded); renderTgSection();
+  }
+}
+async function copyTgCode() {
+  const code = state.tgCode && state.tgCode.code;
+  if (!code) return;
+  const text = `verifikasi ${code}`;
+  try {
+    await navigator.clipboard.writeText(text);
+    tgStatus('Kode disalin. Tempel di chat bot Telegram lalu kirim.');
+  } catch {
+    tgStatus(`Salin manual: ${text}`);
+  }
+}
 function openProfile() {
   if (!state.loaded) return;
   state.profileDraft = {
@@ -1392,6 +1485,9 @@ function openProfile() {
   state.waLink = null;
   state.waCode = null;
   state.waLoading = state.mode === 'cloud' && state.v4Ready;
+  state.tgLink = null;
+  state.tgCode = null;
+  state.tgLoading = state.mode === 'cloud' && state.v4Ready;
   renderProfileForm();
   applyLook(state.profileDraft.theme, state.profileDraft.pattern);
   profileStatus('');
@@ -1401,6 +1497,11 @@ function openProfile() {
       .then((link) => { state.waLink = link; })
       .catch(() => { state.waLink = null; })
       .finally(() => { state.waLoading = false; renderWaSection(); });
+    state.tgLoading = true;
+    state.store.tgLink()
+      .then((link) => { state.tgLink = link; })
+      .catch(() => { state.tgLink = null; })
+      .finally(() => { state.tgLoading = false; renderTgSection(); });
   }
   $('profile').hidden = false;
   document.body.classList.add('modal-open');
@@ -1504,6 +1605,10 @@ function wireV4() {
   $('wa-unlink').addEventListener('click', unlinkWa);
   $('wa-code-copy').addEventListener('click', copyWaCode);
   $('wa-phone').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); connectWa(); } });
+  $('tg-connect').addEventListener('click', connectTg);
+  $('tg-check').addEventListener('click', checkTg);
+  $('tg-unlink').addEventListener('click', unlinkTg);
+  $('tg-code-copy').addEventListener('click', copyTgCode);
   $('avatar-colors').addEventListener('click', (e) => {
     const c = e.target.closest('[data-avatar-color]')?.dataset.avatarColor;
     if (!c) return;

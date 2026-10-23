@@ -197,6 +197,24 @@
           <p id="wa-status" class="hint" role="status"></p>
         </fieldset>
 
+        <fieldset class="swatch-field wa-link-field">
+          <legend>Telegram <span class="optional">opsional</span></legend>
+          <p id="tg-link-state" class="hint">Belum terhubung. Catatan dari Telegram belum masuk ke akun ini.</p>
+          <p class="hint">Telegram tidak perlu nomor. Tekan Hubungkan Telegram untuk dapat kode 6 digit, lalu kirim kode itu ke bot Kantong dari aplikasi Telegram. Satu chat hanya untuk satu akun. Bagian ini terpisah dari WhatsApp — keduanya boleh dipakai bersamaan.</p>
+          <div class="avatar-actions">
+            <button id="tg-connect" class="ghost-btn" type="button">Hubungkan Telegram</button>
+            <button id="tg-check" class="ghost-btn" type="button">Cek status</button>
+            <button id="tg-unlink" class="ghost-btn" type="button" hidden>Putuskan</button>
+          </div>
+          <div id="tg-code-box" class="wa-code-box" hidden>
+            <p class="hint">Kirim pesan ini dari chat Telegram kamu ke bot Kantong:</p>
+            <p><b id="tg-code" class="wa-code">······</b></p>
+            <button id="tg-code-copy" class="ghost-btn" type="button">Salin kode</button>
+            <p id="tg-code-expiry" class="hint"></p>
+          </div>
+          <p id="tg-status" class="hint" role="status"></p>
+        </fieldset>
+
         <p id="profile-status" class="hint" role="status"></p>
         <div class="onb-actions">
           <button id="profile-save" class="primary" type="submit">Simpan profil</button>

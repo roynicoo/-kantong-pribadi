@@ -320,6 +320,21 @@ export function waCodeExpiryText(expiresAt, now = new Date()) {
   if (left <= 0) return 'Kode sudah kedaluwarsa. Tekan Hubungkan lagi untuk kode baru.';
   return `Kode berlaku ${left} menit lagi.`;
 }
+/* ---------- Telegram: status tautan chat ---------- */
+/* Chat Telegram tidak punya nomor, jadi tidak ada normalisasi nomor di sini.
+   Tautan dibuat dengan kode 6 digit yang dikirim ke bot dari aplikasi Telegram. */
+export function tgLinkStatusText(link, now = new Date()) {
+  if (!link) return 'Belum terhubung. Catatan dari Telegram belum masuk ke akun ini.';
+  if (!link.verified_at) return 'Menunggu verifikasi. Kirim kodenya dari Telegram ke bot.';
+  const seen = link.last_seen_at ? new Date(link.last_seen_at) : null;
+  if (!seen || Number.isNaN(seen.getTime())) return 'Terhubung · chat Telegram · belum pernah dipakai.';
+  const minutes = Math.floor(Math.max(0, now.getTime() - seen.getTime()) / 60000);
+  if (minutes < 1) return 'Terhubung · chat Telegram · terakhir dipakai barusan.';
+  if (minutes < 60) return `Terhubung · chat Telegram · terakhir dipakai ${minutes} menit lalu.`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `Terhubung · chat Telegram · terakhir dipakai ${hours} jam lalu.`;
+  return `Terhubung · chat Telegram · terakhir dipakai ${waStamp(link.last_seen_at)}.`;
+}
 export function greetingText(name, hour = new Date().getHours()) {
   const h = Number(hour);
   const period = h >= 4 && h < 11 ? 'Selamat pagi' : h >= 11 && h < 15 ? 'Selamat siang' : h >= 15 && h < 19 ? 'Selamat sore' : 'Selamat malam';

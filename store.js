@@ -69,6 +69,13 @@ DemoStore.prototype.requestWaCode = async function () {
 DemoStore.prototype.unlinkWa = async function () {
   throw Error('Mode demo tidak punya tautan WhatsApp.');
 };
+DemoStore.prototype.tgLink = async function () { return null; };
+DemoStore.prototype.requestTgCode = async function () {
+  throw Error('Verifikasi Telegram butuh akun online. Mode demo hanya menyimpan di browser ini.');
+};
+DemoStore.prototype.unlinkTg = async function () {
+  throw Error('Mode demo tidak punya tautan Telegram.');
+};
 DemoStore.prototype.saveSettings = async function (patch = {}) {
   if (patch.avatar_kind === 'photo' && patch.avatar_data) avatarDataError(patch.avatar_data);
   let saved;
@@ -206,6 +213,39 @@ CloudStore.prototype.requestWaCode = async function (phone) {
 CloudStore.prototype.unlinkWa = async function () {
   await this.ready();
   await this.request('/rest/v1/rpc/kantong_wa_unlink', { method: 'POST', body: JSON.stringify({}) });
+  return true;
+};
+
+/* ============================================================
+   Telegram: tautan chat <-> akun.
+   Chat belum dikenal sebelum kode dikirim ke bot, jadi kode dibuat dulu
+   lewat fungsi security definer, lalu bot yang menulis tautannya.
+   ============================================================ */
+CloudStore.prototype.tgLink = async function () {
+  await this.ready();
+  const data = await this.request(`/rest/v1/tg_links?select=*&user_id=eq.${encodeURIComponent(this.session.user.id)}`);
+  if (!Array.isArray(data)) throw Error('Status Telegram tidak valid.');
+  if (data.length > 1) throw Error('Tautan Telegram ganda terdeteksi. Periksa database.');
+  return data[0] || null;
+};
+CloudStore.prototype.requestTgCode = async function () {
+  await this.ready();
+  let data;
+  try {
+    data = await this.request('/rest/v1/rpc/kantong_tg_request_code', { method: 'POST', body: JSON.stringify({}) });
+  } catch (e) {
+    const msg = String((e && e.message) || '');
+    if (msg.includes('sudah_terhubung')) throw Error('Chat Telegram ini sudah terhubung ke akun ini. Kalau mau ganti chat, putuskan dulu.');
+    if (msg.includes('harus_masuk')) throw Error('Silakan masuk dulu untuk menghubungkan Telegram.');
+    if (msg.includes('does not exist') || msg.includes('Could not find')) throw Error('Fitur Telegram belum aktif. Jalankan kantong-tg-migration.sql sekali, lalu muat ulang.');
+    throw Error('Kode verifikasi gagal dibuat. Coba lagi.');
+  }
+  if (!data || !data.code) throw Error('Kode verifikasi gagal dibuat. Coba lagi.');
+  return data;
+};
+CloudStore.prototype.unlinkTg = async function () {
+  await this.ready();
+  await this.request('/rest/v1/rpc/kantong_tg_unlink', { method: 'POST', body: JSON.stringify({}) });
   return true;
 };
 
