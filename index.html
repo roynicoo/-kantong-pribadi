@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="id" data-theme="light">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#f7f2e7">
-<meta name="description" content="Kantong — catatan keuangan pribadi: pemasukan, pengeluaran, rekap bulanan, dan cetak PDF.">
-<title>Kantong — Keuangan pribadi</title>
+<meta name="viewport"  content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme"  content="light dark">
+<meta name="theme-color"  content="#f7f2e7">
+<meta name="description"  content="Kantong — personal finance notes: income, expenses, monthly recap, and PDF export.">
+<title>Kantong — Personal finance</title>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="style.css">
 <script src="config.js"></script>
@@ -31,641 +31,871 @@
 </svg>
 
 <header class="topbar">
-  <a class="brand" href="./" aria-label="Kantong beranda">
-    <span class="brandmark" aria-hidden="true">k·</span>
-    <span class="brandname">kantong</span>
+  <a class="brand" href="./"  aria-label="Kantong home">
+  <span class="brandmark" aria-hidden="true">k·</span>
+  <span class="brandname">kantong</span>
   </a>
-  <p class="tagline">Ruang kecil untuk rencana besar.</p>
+  <p class="tagline">A small room for big plans.</p>
   <div class="account">
-    <button id="profile-btn" class="profile-btn" type="button" aria-haspopup="dialog" aria-controls="profile" aria-label="Buka profil, sapaan, dan tampilan">
-      <span id="avatar" class="avatar" aria-hidden="true">R</span>
-      <span id="greeting" class="greeting">Hi, …</span>
-    </button>
-    <span id="identity" class="identity"></span>
-    <button id="theme" class="icon-btn" type="button" aria-label="Ganti tema" title="Ganti tema terang/gelap">
-      <svg class="ic ic-sun" aria-hidden="true"><use href="#ic-sun"></use></svg>
-      <svg class="ic ic-moon" aria-hidden="true"><use href="#ic-moon"></use></svg>
-    </button>
-    <button id="logout" class="ghost-btn" type="button" hidden>Keluar</button>
+  <button id="profile-btn" class="profile-btn" type="button" aria-haspopup="dialog" aria-controls="profile"  aria-label="Open profile, greeting, and appearance">
+  <span id="avatar" class="avatar" aria-hidden="true">R</span>
+  <span id="greeting" class="greeting">Hi, …</span>
+  </button>
+  <span id="identity" class="identity"></span>
+  <button id="theme" class="icon-btn" type="button"  aria-label="Ganti tema"  title="Ganti tema terang/gelap">
+  <svg class="ic ic-sun" aria-hidden="true"><use href="#ic-sun"></use></svg>
+  <svg class="ic ic-moon" aria-hidden="true"><use href="#ic-moon"></use></svg>
+  </button>
+  <button id="logout" class="ghost-btn" type="button" hidden>Sign out</button>
   </div>
 </header>
 
 <main>
   <!-- ============ GERBANG ============ -->
   <section id="gate" class="gate">
-    <div class="gate-copy">
-      <p class="eyebrow">Keuangan pribadi, tanpa rumit</p>
-      <h1>Kenali alurnya.<br><em>Tenangkan pikiran.</em></h1>
-      <p class="lede">Catat yang masuk, pahami yang keluar. Satu tempat untuk keuangan sehari-hari Anda — lengkap dengan rekap bulanan yang siap dicetak.</p>
-      <ol class="steps">
-        <li><b>01</b> Catat</li>
-        <li><b>02</b> Pahami</li>
-        <li><b>03</b> Rencanakan</li>
-      </ol>
-    </div>
+  <div class="gate-copy">
+  <p class="eyebrow">Personal finance, minus the fuss</p>
+  <h1>Know the flow.<br><em>Calm the mind.</em></h1>
+  <p class="lede">Record what comes in, understand what goes out. One place for your everyday money — with a monthly recap ready to print.</p>
+  <ol class="steps">
+  <li><b>01</b> Record</li>
+  <li><b>02</b> Understand</li>
+  <li><b>03</b> Plan</li>
+  </ol>
+  </div>
 
-    <div class="gate-panel">
-      <p class="eyebrow">Selamat datang di Kantong</p>
-      <h2>Mulai dari sini.</h2>
-      <p id="setup" class="setup">Memeriksa konfigurasi…</p>
-      <form id="login" hidden>
-        <label for="email">Email</label>
-        <input id="email" type="email" autocomplete="username" required placeholder="nama@email.com">
-        <label for="password">Kata sandi</label>
-        <input id="password" type="password" autocomplete="current-password" required>
-        <button class="primary" type="submit">Masuk ke Kantong</button>
-        <p class="hint">Akun dibuat oleh pemilik melalui dashboard Supabase. Tidak ada pendaftaran publik.</p>
-      </form>
-      <div class="gate-sep"><span>atau</span></div>
-      <button id="demo" class="ghost-btn wide" type="button">Coba demo lokal</button>
-      <p class="hint">Demo kosong, tersimpan hanya di browser ini. Tidak terhubung ke cloud.</p>
-    </div>
+  <div class="gate-panel">
+  <p class="eyebrow">Welcome to Kantong</p>
+  <h2>Start here.</h2>
+  <p id="setup" class="setup">Checking configuration…</p>
+  <p id="signup-disabled" class="gate-notice" role="status" hidden></p>
+
+  <div class="auth-tabs" role="tablist"  aria-label="Sign in or sign up">
+  <button id="tab-login" type="button" role="tab" aria-selected="true" aria-controls="login">Sign in</button>
+  <button id="tab-signup" type="button" role="tab" aria-selected="false" aria-controls="signup">Sign up</button>
+  </div>
+
+  <form id="login" hidden novalidate>
+  <label for="email">Email</label>
+  <input id="email" type="email" autocomplete="username" required  placeholder="you@example.com">
+  <label for="password">Password</label>
+  <input id="password" type="password" autocomplete="current-password" required>
+  <p id="login-error" class="field-error" role="alert" hidden></p>
+  <button class="primary" type="submit">Sign in to Kantong</button>
+  <button id="forgot-open" class="link-btn" type="button">Forgot password?</button>
+  <p class="note">Private account. No data is shared with anyone else.</p>
+  </form>
+
+  <form id="signup" hidden novalidate>
+  <label for="su-email">Email</label>
+  <input id="su-email" type="email" autocomplete="email" inputmode="email"  placeholder="you@example.com" aria-describedby="err-su-email">
+  <p id="err-su-email" class="field-error" role="alert" hidden></p>
+
+  <label for="su-username">Nickname</label>
+  <input id="su-username" autocomplete="nickname" maxlength="24"  placeholder="Roy" aria-describedby="err-su-username">
+  <p id="err-su-username" class="field-error" role="alert" hidden></p>
+
+  <label for="su-password">Password</label>
+  <div class="pw-field">
+  <input id="su-password" type="password" autocomplete="new-password" aria-describedby="su-strength err-su-password">
+  <button id="su-toggle" class="pw-toggle" type="button" aria-controls="su-password" aria-pressed="false"  aria-label="Show password">Show</button>
+  </div>
+  <p id="su-strength" class="pw-strength" data-strength="0" aria-live="polite">At least 8 characters, mix letters and numbers.</p>
+  <p id="err-su-password" class="field-error" role="alert" hidden></p>
+
+  <label id="su-invite-field" for="su-invite" hidden>Invite code <span class="optional">optional</span></label>
+  <input id="su-invite" autocomplete="off"  placeholder="INVITE-CODE" hidden aria-describedby="err-su-invite">
+  <p id="err-su-invite" class="field-error" role="alert" hidden></p>
+
+  <button id="su-submit" class="primary" type="submit">Create account</button>
+  <p class="note">Verification email <span class="hint"><button type="button" class="hint-btn" aria-label="About the verification email" aria-expanded="false" aria-controls="hint-verify"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-verify" role="note" aria-live="polite" hidden>After signing up, open the verification link in your email (check spam too), then sign in.</span></span></p>
+  <p id="signup-status" class="auth-status" role="status" aria-live="polite" hidden></p>
+  <div id="signup-verify" class="auth-followup" hidden>
+  <button id="resend-confirm" class="ghost-btn wide" type="button">Resend verification email</button>
+  <p id="resend-note" class="note" role="status" aria-live="polite"></p>
+  </div>
+  <button id="signup-to-login" class="link-btn" type="button">Already have an account? Sign in</button>
+  </form>
+
+  <form id="forgot" hidden novalidate>
+  <p class="note">Password reset <span class="hint"><button type="button" class="hint-btn" aria-label="About resetting your password" aria-expanded="false" aria-controls="hint-reset"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-reset" role="note" aria-live="polite" hidden>Enter your account email. We'll send a link to set a new password.</span></span></p>
+  <label for="fp-email">Account email</label>
+  <input id="fp-email" type="email" autocomplete="email"  placeholder="you@example.com" aria-describedby="forgot-error">
+  <p id="forgot-error" class="field-error" role="alert" hidden></p>
+  <button id="forgot-submit" class="primary" type="submit">Send reset link</button>
+  <p id="forgot-status" class="auth-status" role="status" aria-live="polite" hidden></p>
+  <button id="forgot-back" class="link-btn" type="button">Back to sign in</button>
+  </form>
+
+  <form id="reset-form" hidden novalidate>
+  <p class="note">Recovery link <span class="hint"><button type="button" class="hint-btn" aria-label="About the recovery link" aria-expanded="false" aria-controls="hint-recovery"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-recovery" role="note" aria-live="polite" hidden>Recovery link opened. Set a new password for this account.</span></span></p>
+  <label for="rp-password">New password</label>
+  <div class="pw-field">
+  <input id="rp-password" type="password" autocomplete="new-password" aria-describedby="rp-strength reset-error">
+  <button id="rp-toggle" class="pw-toggle" type="button" aria-controls="rp-password" aria-pressed="false"  aria-label="Show password">Show</button>
+  </div>
+  <p id="rp-strength" class="pw-strength" data-strength="0" aria-live="polite"></p>
+  <p id="reset-error" class="field-error" role="alert" hidden></p>
+  <button id="reset-submit" class="primary" type="submit">Save new password</button>
+  <p id="reset-status" class="auth-status" role="status" aria-live="polite" hidden></p>
+  </form>
+
+  <div class="gate-sep"><span>or</span></div>
+  <button id="demo" class="ghost-btn wide" type="button">Try the local demo</button>
+  <p class="note">Local demo <span class="hint"><button type="button" class="hint-btn" aria-label="About the local demo" aria-expanded="false" aria-controls="hint-demo"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-demo" role="note" aria-live="polite" hidden>Empty demo, stored only in this browser. Not connected to the cloud.</span></span></p>
+  </div>
   </section>
 
   <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
 
   <!-- ============ PANDUAN AWAL (v4) ============ -->
   <section id="onboarding" class="onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title" hidden>
-    <div class="onboarding-card">
-      <p class="eyebrow" id="onboarding-step-label">Langkah 1 dari 4</p>
-      <h2 id="onboarding-title">Mau mulai kelola uang?</h2>
-      <p id="onboarding-lede" class="onboarding-lede">Tiga langkah singkat: saldo awal, pemasukan rutin, lalu mulai mencatat. Semua bisa diubah nanti.</p>
+  <div class="onboarding-card">
+  <p class="eyebrow" id="onboarding-step-label">Step 1 of 4</p>
+  <h2 id="onboarding-title">Want to start tracking money?</h2>
+  <p id="onboarding-lede" class="onboarding-lede">Three short steps: opening balance, recurring income, then start recording. Everything can be changed later.</p>
 
-      <div class="onb-step" data-step="1">
-        <p class="hint">Kantong mencatat pemasukan dan pengeluaran sebagai arus kas pribadi. Tidak ada rekening bank yang terhubung dan tidak ada data yang dibagikan.</p>
-        <div class="onb-actions">
-          <button id="onb-start" class="primary" type="button">Mulai</button>
-          <button id="onb-later" class="ghost-btn" type="button">Nanti</button>
-        </div>
-        <p class="hint">Memilih “Nanti” tidak mengunci aplikasi. Anda tetap bisa mencatat, dan pengingat untuk menyelesaikan panduan tetap tersedia.</p>
-      </div>
+  <div class="onb-step" data-step="1">
+  <p class="note">How it works <span class="hint"><button type="button" class="hint-btn" aria-label="How Kantong records money" aria-expanded="false" aria-controls="hint-cashflow"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-cashflow" role="note" aria-live="polite" hidden>Kantong records income and expenses as your personal cash flow. No bank account is connected and no data is shared.</span></span></p>
+  <label id="onb-seed-row" class="checkline seed-offer" for="onb-seed">
+  <input id="onb-seed" type="checkbox" checked>
+  <span>Set up a ready-to-use set of money categories — 4 kinds, 8 spending groups, 68 generic categories — plus a <b>Cash</b> account.</span>
+  </label>
+  <p id="onb-seed-note" class="note">You can add, rename, archive or delete any of them later in the Budget tab. Existing categories are never overwritten, and a category you delete does not come back.</p>
+  <div class="onb-actions">
+  <button id="onb-start" class="primary" type="button">Start</button>
+  <button id="onb-later" class="ghost-btn" type="button">Later</button>
+  </div>
+  <p class="note">If you choose Later <span class="hint"><button type="button" class="hint-btn" aria-label="About choosing Later" aria-expanded="false" aria-controls="hint-later"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-later" role="note" aria-live="polite" hidden>Choosing “Later” does not lock the app. You can still record entries, and a reminder to finish the guide stays available.</span></span></p>
+  </div>
 
-      <form id="onb-accounts-form" class="onb-step" data-step="2" novalidate>
-        <p class="hint">Uangmu sekarang di mana? Buat akun pertama (mis. BCA atau Tunai) dan isi saldonya hari ini. Boleh menambah beberapa akun.</p>
-        <div id="onb-account-list" class="onb-account-list"></div>
-        <button id="onb-add-account" class="ghost-btn" type="button">Tambah akun lain</button>
-        <p class="hint">Angka ini hanya untuk menghitung saldo menurut catatan Anda, bukan saldo rekening bank yang diverifikasi.</p>
-        <div class="onb-actions">
-          <button id="onb-accounts-next" class="primary" type="submit">Lanjut</button>
-          <button id="onb-accounts-skip" class="ghost-btn" type="button">Belum tahu, nanti saja</button>
-        </div>
-      </form>
+  <form id="onb-accounts-form" class="onb-step" data-step="2" novalidate>
+  <p class="note">First account <span class="hint"><button type="button" class="hint-btn" aria-label="About the first account" aria-expanded="false" aria-controls="hint-onb-accounts"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-onb-accounts" role="note" aria-live="polite" hidden>Where is your money right now? Create your first account (e.g. BCA or Cash) and enter its balance today. You can add more accounts.</span></span></p>
+  <div id="onb-account-list" class="onb-account-list"></div>
+  <button id="onb-add-account" class="ghost-btn" type="button">Add another account</button>
+  <p class="note">Your own record <span class="hint"><button type="button" class="hint-btn" aria-label="About the opening balance number" aria-expanded="false" aria-controls="hint-onb-balance"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-onb-balance" role="note" aria-live="polite" hidden>This number only drives the balance per your own records — it is not a verified bank balance.</span></span></p>
+  <div class="onb-actions">
+  <button id="onb-accounts-next" class="primary" type="submit">Continue</button>
+  <button id="onb-accounts-skip" class="ghost-btn" type="button">Not sure yet, later</button>
+  </div>
+  </form>
 
-      <form id="onb-schedule-form" class="onb-step" data-step="3" novalidate hidden>
-        <p class="hint">Gaji atau pemasukan tetap? Isi sekali, Kantong mencatatnya otomatis setiap bulan (satu kali per bulan, termasuk bulan yang terlewat).</p>
-        <label for="onb-name">Nama pemasukan</label>
-        <input id="onb-name" maxlength="50" placeholder="Gaji rutin" autocomplete="off">
-        <div class="form-pair">
-          <div><label for="onb-amount">Nominal (Rp)</label><input id="onb-amount" inputmode="numeric" pattern="[0-9]*" placeholder="5000000"></div>
-          <div><label for="onb-day">Tanggal masuk</label><input id="onb-day" inputmode="numeric" pattern="[0-9]*" value="25" placeholder="1–31"></div>
-        </div>
-        <div class="form-pair">
-          <div><label for="onb-sched-start">Mulai bulan</label><input id="onb-sched-start" type="month" min="0001-01" max="9998-12"></div>
-          <div><label for="onb-category">Kategori</label><select id="onb-category"></select></div>
-        </div>
-        <p class="hint">Tanggal 31 pada bulan pendek memakai hari terakhir bulan itu. Bisa diubah atau dijeda nanti di tab Rutin.</p>
-        <div class="onb-actions">
-          <button id="onb-schedule-save" class="primary" type="submit">Simpan &amp; lanjut</button>
-          <button id="onb-schedule-skip" class="ghost-btn" type="button">Belum ada pemasukan rutin</button>
-        </div>
-      </form>
+  <form id="onb-schedule-form" class="onb-step" data-step="3" novalidate hidden>
+  <p class="note">Recurring income <span class="hint"><button type="button" class="hint-btn" aria-label="About recurring income" aria-expanded="false" aria-controls="hint-onb-income"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-onb-income" role="note" aria-live="polite" hidden>A salary or fixed income? Enter it once and Kantong records it automatically every month (once per month, including months you missed).</span></span></p>
+  <label for="onb-name">Income name</label>
+  <input id="onb-name" maxlength="50"  placeholder="Monthly salary" autocomplete="off">
+  <div class="form-pair">
+  <div><label for="onb-amount">Amount (Rp)</label><input id="onb-amount" inputmode="numeric" pattern="[0-9]*"  placeholder="5000000" data-money></div>
+  <div><label for="onb-day">Pay date</label><input id="onb-day" inputmode="numeric" pattern="[0-9]*" value="25"  placeholder="1–31"></div>
+  </div>
+  <div class="form-pair">
+  <div><label for="onb-sched-start">Start month</label><input id="onb-sched-start" type="month" min="0001-01" max="9998-12"></div>
+  <div><label for="onb-category">Category</label><select id="onb-category"></select></div>
+  </div>
+  <p class="note">Short months <span class="hint"><button type="button" class="hint-btn" aria-label="About short months" aria-expanded="false" aria-controls="hint-short-month"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-short-month" role="note" aria-live="polite" hidden>Day 31 in a short month uses that month's last day. You can change or pause it later in the Recurring tab.</span></span></p>
+  <div class="onb-actions">
+  <button id="onb-schedule-save" class="primary" type="submit">Save &amp; continue</button>
+  <button id="onb-schedule-skip" class="ghost-btn" type="button">No recurring income yet</button>
+  </div>
+  </form>
 
-      <div class="onb-step" data-step="4" hidden>
-        <ul id="onb-summary" class="onb-summary"></ul>
-        <p class="hint">Semua pengaturan ini bisa diubah kapan saja di tab <b>Rutin</b> → Saldo awal &amp; panduan.</p>
-        <div class="onb-actions">
-          <button id="onb-finish" class="primary" type="button">Masuk ke dashboard</button>
-        </div>
-      </div>
-    </div>
+  <div class="onb-step" data-step="4" hidden>
+  <ul id="onb-summary" class="onb-summary"></ul>
+  <p class="note">Changing this later <span class="hint"><button type="button" class="hint-btn" aria-label="About changing this later" aria-expanded="false" aria-controls="hint-onb-change"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-onb-change" role="note" aria-live="polite" hidden>All of this can be changed any time in the <b>Recurring</b> → Opening balance &amp; guide.</span></span></p>
+  <div class="onb-actions">
+  <button id="onb-finish" class="primary" type="button">Go to dashboard</button>
+  </div>
+  </div>
+  </div>
   </section>
 
   <!-- ============ PROFIL & TAMPILAN (v4) ============ -->
   <section id="profile" class="onboarding profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-title" hidden>
-    <div class="onboarding-card profile-card">
-      <div class="card-head">
-        <div><p class="eyebrow">Profil &amp; tampilan</p><h2 id="profile-title">Hi, …</h2></div>
-        <button id="profile-close" class="icon-btn" type="button" aria-label="Tutup profil"><svg class="ic" aria-hidden="true"><use href="#ic-close"></use></svg></button>
-      </div>
-      <div class="profile-preview">
-        <span id="profile-avatar" class="avatar lg" aria-hidden="true">R</span>
-        <div class="profile-meta"><b id="profile-name-preview">…</b><small id="profile-email"></small></div>
-      </div>
-      <form id="profile-form" novalidate>
-        <label for="profile-name">Nama pengguna <span class="optional">2–24 karakter</span></label>
-        <input id="profile-name" maxlength="24" autocomplete="nickname" aria-describedby="profile-name-help">
-        <p id="profile-name-help" class="hint">Dipakai untuk sapaan “Hi, …”. Boleh huruf, angka, spasi, titik, garis bawah, tanda hubung. Email tetap untuk masuk dan tidak diubah di sini.</p>
+  <div class="onboarding-card profile-card">
+  <div class="card-head">
+  <div><p class="eyebrow">Profile &amp; appearance</p><h2 id="profile-title">Hi, …</h2></div>
+  <button id="profile-close" class="icon-btn" type="button"  aria-label="Close profile"><svg class="ic" aria-hidden="true"><use href="#ic-close"></use></svg></button>
+  </div>
+  <div class="profile-preview">
+  <span id="profile-avatar" class="avatar lg" aria-hidden="true">R</span>
+  <div class="profile-meta"><b id="profile-name-preview">…</b><small id="profile-email"></small></div>
+  </div>
+  <form id="profile-form" novalidate>
+  <div class="hint-row"><label for="profile-name">Display name <span class="optional">2–24 characters</span></label><span class="hint"><button type="button" class="hint-btn" aria-label="About the display name" aria-expanded="false" aria-controls="hint-display-name"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-display-name" role="note" aria-live="polite" hidden>Used for the “Hi, …” greeting. Letters, numbers, spaces, dots, underscores and hyphens are allowed. Your email still signs you in and is not changed here.</span></span></div>
+  <input id="profile-name" maxlength="24" autocomplete="nickname" aria-describedby="hint-display-name">
+        
 
-        <fieldset class="swatch-field">
-          <legend>Warna avatar</legend>
-          <div id="avatar-colors" class="swatches"></div>
-        </fieldset>
-        <fieldset class="swatch-field">
-          <legend>Foto avatar <span class="optional">opsional</span></legend>
-          <div class="avatar-actions">
-            <input id="avatar-file" type="file" accept="image/jpeg,image/webp" class="sr-only">
-            <button id="avatar-upload" class="ghost-btn" type="button">Pilih foto…</button>
-            <button id="avatar-remove" class="ghost-btn" type="button" hidden>Hapus foto</button>
-          </div>
-          <p class="hint">JPEG/WebP, dipotong persegi 256&nbsp;px lalu dikompres otomatis. Maksimal 100&nbsp;KB. Tanpa Supabase Storage, foto disimpan sebagai data pribadi di baris pengaturan Anda — bukan tautan publik. Bila gagal dikompres, foto tidak disimpan dan Anda melihat pesan galat.</p>
-        </fieldset>
+  <fieldset class="swatch-field">
+  <legend>Avatar color</legend>
+  <div id="avatar-colors" class="swatches"></div>
+  </fieldset>
+  <fieldset class="swatch-field">
+  <div class="hint-row"><legend>Avatar photo <span class="optional">optional</span></legend><span class="hint"><button type="button" class="hint-btn" aria-label="About the avatar photo" aria-expanded="false" aria-controls="hint-avatar-photo"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-avatar-photo" role="note" aria-live="polite" hidden>JPEG/WebP, cropped to a 256&nbsp;px square and compressed automatically. 100&nbsp;KB max. There is no Supabase Storage, so the photo is stored as private data in your settings row — never a public link. If compression fails, nothing is saved and you'll see an error message.</span></span></div>
+  <div class="avatar-actions">
+  <input id="avatar-file" type="file" accept="image/jpeg,image/webp" class="sr-only">
+  <button id="avatar-upload" class="ghost-btn" type="button">Choose photo…</button>
+  <button id="avatar-remove" class="ghost-btn" type="button" hidden>Remove photo</button>
+  </div>
+          
+  </fieldset>
 
-        <fieldset class="swatch-field">
-          <legend>Tema warna</legend>
-          <div id="theme-swatches" class="swatches"></div>
-        </fieldset>
-        <fieldset class="swatch-field">
-          <legend>Latar halus</legend>
-          <div id="pattern-swatches" class="swatches"></div>
-        </fieldset>
-        <fieldset class="swatch-field wa-link-field">
-          <legend>WhatsApp <span class="optional">opsional</span></legend>
-          <p id="wa-link-state" class="hint">Belum terhubung. Catatan dari WhatsApp belum masuk ke akun ini.</p>
-          <label for="wa-phone">Nomor WhatsApp</label>
-          <input id="wa-phone" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="081233434573" aria-describedby="wa-phone-help">
-          <p id="wa-phone-help" class="hint">Satu nomor hanya untuk satu akun. Format 08xx, +62xx, atau 62xx. Nomor yang masih dipakai di aplikasi WhatsApp biasa harus dilepas dulu.</p>
-          <div class="avatar-actions">
-            <button id="wa-connect" class="ghost-btn" type="button">Hubungkan</button>
-            <button id="wa-unlink" class="ghost-btn" type="button" hidden>Putuskan</button>
-          </div>
-          <div id="wa-code-box" class="wa-code-box" hidden>
-            <p class="hint">Kirim pesan ini dari WhatsApp nomor tersebut ke bot:</p>
-            <p><b id="wa-code" class="wa-code">······</b></p>
-            <button id="wa-code-copy" class="ghost-btn" type="button">Salin kode</button>
-            <p id="wa-code-expiry" class="hint"></p>
-          </div>
-          <p id="wa-status" class="hint" role="status"></p>
-        </fieldset>
+  <fieldset class="swatch-field">
+  <legend>Color theme</legend>
+  <div id="theme-swatches" class="swatches"></div>
+  </fieldset>
+  <fieldset class="swatch-field">
+  <legend>Background pattern</legend>
+  <div id="pattern-swatches" class="swatches"></div>
+  </fieldset>
+  <fieldset class="swatch-field wa-link-field">
+  <legend>WhatsApp <span class="optional">optional</span></legend>
+  <p id="wa-link-state" class="note">Not connected. Notes from WhatsApp do not reach this account yet.</p>
+  <div class="hint-row"><label for="wa-phone">WhatsApp number</label><span class="hint"><button type="button" class="hint-btn" aria-label="About the WhatsApp number" aria-expanded="false" aria-controls="hint-wa-phone"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-wa-phone" role="note" aria-live="polite" hidden>One number per account. Use 08xx, +62xx, or 62xx. A number still active in the regular WhatsApp app must be released first.</span></span></div>
+  <input id="wa-phone" inputmode="tel" autocomplete="tel" maxlength="20"  placeholder="081233434573" aria-describedby="hint-wa-phone">
+          
+  <div class="avatar-actions">
+  <button id="wa-connect" class="ghost-btn" type="button">Connect</button>
+  <button id="wa-unlink" class="ghost-btn" type="button" hidden>Disconnect</button>
+  </div>
+  <div id="wa-code-box" class="wa-code-box" hidden>
+  <p class="note">Send this message from that WhatsApp number to the bot:</p>
+  <p><b id="wa-code" class="wa-code">······</b></p>
+  <button id="wa-code-copy" class="ghost-btn" type="button">Copy code</button>
+  <p id="wa-code-expiry" class="note"></p>
+  </div>
+  <p id="wa-status" class="note" role="status"></p>
+  </fieldset>
 
-        <fieldset class="swatch-field wa-link-field">
-          <legend>Telegram <span class="optional">opsional</span></legend>
-          <p id="tg-link-state" class="hint">Belum terhubung. Catatan dari Telegram belum masuk ke akun ini.</p>
-          <p class="hint">Telegram tidak perlu nomor. Tekan Hubungkan Telegram untuk dapat kode 6 digit, lalu kirim kode itu ke bot Kantong dari aplikasi Telegram. Satu chat hanya untuk satu akun. Bagian ini terpisah dari WhatsApp — keduanya boleh dipakai bersamaan.</p>
-          <div class="avatar-actions">
-            <button id="tg-connect" class="ghost-btn" type="button">Hubungkan Telegram</button>
-            <button id="tg-check" class="ghost-btn" type="button">Cek status</button>
-            <button id="tg-unlink" class="ghost-btn" type="button" hidden>Putuskan</button>
-          </div>
-          <div id="tg-code-box" class="wa-code-box" hidden>
-            <p class="hint">Kirim pesan ini dari chat Telegram kamu ke bot Kantong:</p>
-            <p><b id="tg-code" class="wa-code">······</b></p>
-            <button id="tg-code-copy" class="ghost-btn" type="button">Salin kode</button>
-            <p id="tg-code-expiry" class="hint"></p>
-          </div>
-          <p id="tg-status" class="hint" role="status"></p>
-        </fieldset>
+  <fieldset class="swatch-field wa-link-field">
+  <div class="hint-row"><legend>Telegram <span class="optional">optional</span></legend><span class="hint"><button type="button" class="hint-btn" aria-label="About connecting Telegram" aria-expanded="false" aria-controls="hint-telegram"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-telegram" role="note" aria-live="polite" hidden>Telegram needs no number. Tap Connect Telegram to get a 6-digit code, then send that code to the Kantong bot from the Telegram app. One chat per account. This is separate from WhatsApp — you can use both.</span></span></div>
+  <p id="tg-link-state" class="note">Not connected. Notes from Telegram do not reach this account yet.</p>
+          
+  <div class="avatar-actions">
+  <button id="tg-connect" class="ghost-btn" type="button">Connect Telegram</button>
+  <button id="tg-check" class="ghost-btn" type="button">Check status</button>
+  <button id="tg-unlink" class="ghost-btn" type="button" hidden>Disconnect</button>
+  </div>
+  <div id="tg-code-box" class="wa-code-box" hidden>
+  <p class="note">Send this message from your Telegram chat to the Kantong bot:</p>
+  <p><b id="tg-code" class="wa-code">······</b></p>
+  <button id="tg-code-copy" class="ghost-btn" type="button">Copy code</button>
+  <p id="tg-code-expiry" class="note"></p>
+  </div>
+  <p id="tg-status" class="note" role="status"></p>
+  </fieldset>
 
-        <p id="profile-status" class="hint" role="status"></p>
-        <div class="onb-actions">
-          <button id="profile-save" class="primary" type="submit">Simpan profil</button>
-          <button id="profile-reset" class="ghost-btn" type="button">Atur ulang tampilan</button>
-        </div>
-        <p class="hint">Tersimpan di akun, jadi ponsel dan laptop memakai nama, avatar, dan tema yang sama. Mode gelap tetap terpisah dan tersimpan di perangkat ini.</p>
-      </form>
-    </div>
+  <p id="profile-status" class="note" role="status"></p>
+  <div class="onb-actions">
+  <button id="profile-save" class="primary" type="submit">Save profile</button>
+  <button id="profile-reset" class="ghost-btn" type="button">Reset appearance</button>
+  </div>
+  <p class="note">Where this is saved <span class="hint"><button type="button" class="hint-btn" aria-label="About where your profile is saved" aria-expanded="false" aria-controls="hint-profile-saved"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-profile-saved" role="note" aria-live="polite" hidden>Saved to your account, so phone and laptop share the same name, avatar, and theme. Dark mode stays separate and is stored on this device.</span></span></p>
+  </form>
+  </div>
   </section>
 
   <!-- ============ RUANG KERJA ============ -->
   <section id="workspace" hidden>
-    <div class="ws-head">
-      <div>
-        <p class="eyebrow" id="dash-greeting">Buku keuangan Anda</p>
-        <h1>Setiap rupiah, bercerita.</h1>
-        <p id="sync" class="sync"></p>
-      </div>
-      <div class="month-nav">
-        <button class="icon-btn round" type="button" id="prev-month" aria-label="Bulan sebelumnya"><svg class="ic" aria-hidden="true"><use href="#ic-chevron"></use></svg></button>
-        <div class="month-field">
-          <label for="month">Periode</label>
-          <input id="month" type="month" min="0001-01" max="9998-12" required>
-        </div>
-        <button class="icon-btn round flip" type="button" id="next-month" aria-label="Bulan berikutnya"><svg class="ic" aria-hidden="true"><use href="#ic-chevron"></use></svg></button>
-        <button class="ghost-btn" type="button" id="this-month">Bulan ini</button>
-      </div>
-    </div>
+  <div class="ws-head">
+  <div>
+  <p class="eyebrow" id="dash-greeting">Your ledger</p>
+  <h1>Every rupiah tells a story.</h1>
+  <p id="sync" class="sync"></p>
+  </div>
+  <div class="month-nav">
+  <button class="icon-btn round" type="button" id="prev-month"  aria-label="Previous month"><svg class="ic" aria-hidden="true"><use href="#ic-chevron"></use></svg></button>
+  <div class="month-field">
+  <label for="month">Period</label>
+  <input id="month" type="month" min="0001-01" max="9998-12" required>
+  </div>
+  <button class="icon-btn round flip" type="button" id="next-month"  aria-label="Next month"><svg class="ic" aria-hidden="true"><use href="#ic-chevron"></use></svg></button>
+  <button class="ghost-btn" type="button" id="this-month">This month</button>
+  </div>
+  </div>
 
-    <div id="onboarding-banner" class="onboarding-banner" role="status" hidden>
-      <p><b>Panduan awal belum selesai.</b> Atur saldo awal dan pemasukan rutin agar “Saldo saat ini” akurat.</p>
-      <div class="onboarding-banner-actions">
-        <button id="onb-banner-open" class="ghost-btn" type="button">Lanjutkan</button>
-        <button id="onb-banner-close" class="icon-btn" type="button" aria-label="Tutup pengingat panduan"><svg class="ic" aria-hidden="true"><use href="#ic-close"></use></svg></button>
-      </div>
-    </div>
+  <div id="onboarding-banner" class="onboarding-banner" role="status" hidden>
+  <p><b>Setup guide not finished.</b> Set your opening balance and recurring income so “Current balance” is accurate.</p>
+  <div class="onboarding-banner-actions">
+  <button id="onb-banner-open" class="ghost-btn" type="button">Continue</button>
+  <button id="onb-banner-close" class="icon-btn" type="button"  aria-label="Dismiss setup reminder"><svg class="ic" aria-hidden="true"><use href="#ic-close"></use></svg></button>
+  </div>
+  </div>
 
-    <nav class="view-tabs" aria-label="Tampilan buku keuangan">
-      <button type="button" data-view="summary" aria-pressed="true">Ringkasan</button>
-      <button type="button" data-view="transactions" aria-pressed="false">Transaksi</button>
-      <button type="button" data-view="budget" aria-pressed="false">Anggaran</button>
-      <button type="button" data-view="daily" aria-pressed="false">Rekap Harian</button>
-      <button type="button" data-view="recurring" aria-pressed="false">Rutin</button>
-      <button type="button" data-view="accounts" aria-pressed="false">Akun</button>
-    </nav>
-    <button id="improvement-alert" class="ghost-btn planning-notice" type="button" hidden>Arus kas aktual minus · Buat improvement (simulasi opsional)</button>
-    <p id="planning-notice" class="planning-notice" role="status" hidden></p>
-    <div id="v4-notice" class="planning-notice notice-dismissible" role="status" hidden>
-      <span id="v4-notice-text"></span>
-      <button id="v4-notice-close" class="icon-btn" type="button" aria-label="Tutup pemberitahuan migrasi v4"><svg class="ic" aria-hidden="true"><use href="#ic-close"></use></svg></button>
-    </div>
-    <p id="autopost-notice" class="planning-notice" role="status" hidden></p>
-    <section id="budget-panel" class="card sheet-panel" hidden>
-      <div class="card-head"><div><p class="eyebrow">Rencana bulanan · opsional</p><h2>Anggaran / aktual / gap</h2></div><button id="improvement-start" type="button" class="ghost-btn">Buat improvement</button></div>
-      <p class="hint">Kosong = belum dianggarkan; 0 = target nol. Gap = budget − aktual; negatif berarti terlampaui. Semua kategori pengeluaran boleh dipakai atau tidak.</p>
-      <p id="improvement-warning" class="planning-notice" hidden>Arus kas aktual bulan ini minus. Buat improvement untuk simulasi menekan anggaran, bukan mengubah pengeluaran yang sudah terjadi.</p>
-      <div class="sheet-scroll" tabindex="0" aria-label="Tabel anggaran"><table class="budget-table"><thead><tr><th>Kategori pengeluaran</th><th>Budget (Rp)</th><th>Actual</th><th>Gap</th><th>Aksi</th></tr></thead><tbody id="budget-rows"></tbody><tfoot id="budget-total"></tfoot></table></div>
-      <details class="category-manager"><summary>Kelola kategori pengeluaran</summary><p class="hint">Centang untuk pilihan transaksi baru. Menonaktifkan / mengganti nama tidak mengubah catatan lama. Andreas: dukungan adik; Ortu: bantuan tunai orang tua; UKT: kuliah adik. Semuanya pengeluaran opsional, bukan tabungan.</p><div id="category-options"></div><form id="category-form"><label for="category-name">Kategori baru</label><div class="inline-form"><input id="category-name" maxlength="50" placeholder="Contoh: Buku adik"><button id="category-add" type="submit" class="ghost-btn">Tambah kategori</button></div></form></details>
-      <section id="scenario-panel" hidden><h3>Improvement · simulasi saja</h3><p class="hint">Satu simulasi tersimpan per bulan. Tidak mengganti anggaran aktif atau transaksi. Bahkan untuk bulan lampau, proyeksi ini tidak mengubah sisa aktual. Baseline memakai budget; jika kosong memakai aktual (diberi label).</p><label for="scenario-income">Asumsi pemasukan (Rp) · boleh diubah</label><input id="scenario-income" type="text" inputmode="numeric"><p id="scenario-state" class="hint"></p><div class="sheet-scroll"><table><thead><tr><th>Kategori</th><th>Budget aktif</th><th>Aktual</th><th>Baseline / sumber</th><th>Usulan (Rp)</th><th>Pengurangan</th></tr></thead><tbody id="scenario-rows"></tbody></table></div><p id="scenario-totals"></p><button id="scenario-save" type="button" class="primary">Simpan simulasi terpisah</button></section>
-    </section>
-    <section id="daily-panel" class="card sheet-panel" hidden><p class="eyebrow">Seluruh pengeluaran bulan terpilih</p><h2>Rekap harian</h2><p class="hint">Geser tabel ke samping untuk semua kategori. Transaksi tanggal dan kategori sama dijumlahkan. Pemasukan tidak dihitung sebagai pengeluaran.</p><div id="daily-scroll" class="sheet-scroll" tabindex="0" aria-label="Geser rekap harian"><table id="daily-table"></table></div></section>
-    <section id="recurring-panel" class="card sheet-panel" hidden>
-      <div class="card-head">
-        <div><p class="eyebrow">Otomatis, tetap terkendali</p><h2>Pemasukan rutin</h2></div>
-        <button id="schedule-new" class="ghost-btn" type="button">Tambah jadwal</button>
-      </div>
-      <p class="hint">Untuk gaji atau pemasukan tetap. Bila tanggalnya sudah lewat, Kantong mencatat satu kali per bulan — termasuk bulan yang terlewat sejak bulan mulai. Tanggal 31 pada bulan pendek memakai hari terakhir. Mengubah jadwal hanya memengaruhi pencatatan berikutnya; baris yang sudah tercatat tetap bisa diubah atau dihapus seperti transaksi biasa.</p>
-      <p id="recurring-notice" class="hint" role="status"></p>
-      <div class="sheet-scroll" tabindex="0" aria-label="Daftar jadwal pemasukan rutin">
-        <table class="schedule-table">
-          <thead><tr><th>Jadwal</th><th>Nominal</th><th>Periode</th><th>Status</th><th>Aksi</th></tr></thead>
-          <tbody id="schedule-rows"></tbody>
-        </table>
-      </div>
-      <form id="schedule-form" novalidate hidden>
-        <h3 id="schedule-form-title">Tambah jadwal</h3>
-        <label for="sched-name">Nama pemasukan</label>
-        <input id="sched-name" maxlength="50" placeholder="Gaji rutin" autocomplete="off">
-        <div class="form-pair">
-          <div><label for="sched-amount">Nominal (Rp)</label><input id="sched-amount" inputmode="numeric" pattern="[0-9]*" placeholder="5000000"></div>
-          <div><label for="sched-day">Tanggal masuk (1–31)</label><input id="sched-day" inputmode="numeric" pattern="[0-9]*" placeholder="25"></div>
-        </div>
-        <div class="form-pair">
-          <div><label for="sched-start">Mulai bulan</label><input id="sched-start" type="month" min="0001-01" max="9998-12"></div>
-          <div><label for="sched-end">Berhenti bulan <span class="optional">opsional</span></label><input id="sched-end" type="month" min="0001-01" max="9998-12"></div>
-        </div>
-        <div class="form-pair">
-          <div><label for="sched-category">Kategori</label><select id="sched-category"></select></div>
-          <div class="sched-active-field"><label for="sched-active">Status</label><label class="checkline" for="sched-active"><input id="sched-active" type="checkbox" checked> Aktif (catat otomatis)</label></div>
-        </div>
-        <label for="sched-notes">Catatan <span class="optional">opsional</span></label>
-        <input id="sched-notes" maxlength="500" placeholder="Contoh: gaji bulanan kantor">
-        <div class="onb-actions">
-          <button id="sched-save" class="primary" type="submit">Simpan jadwal</button>
-          <button id="sched-cancel" class="ghost-btn" type="button">Batal</button>
-        </div>
-        <p class="hint">Baris otomatis memakai catatan “Otomatis · nama jadwal” dan bisa dicari seperti transaksi lain.</p>
-      </form>
+  <nav class="view-tabs"  aria-label="Main menus">
+  <button type="button" data-view="dashboard" aria-pressed="true">Dashboard</button>
+  <button type="button" data-view="transactions" aria-pressed="false">Transactions</button>
+  <button type="button" data-view="budget" aria-pressed="false">Budget</button>
+  <button type="button" data-view="savings" aria-pressed="false">Savings Goals</button>
+  <button type="button" data-view="reports" aria-pressed="false">Reports</button>
+  </nav>
+  <button id="improvement-alert" class="ghost-btn planning-notice" type="button" hidden>Actual cash flow is negative · Start an improvement (optional simulation)</button>
+  <p id="planning-notice" class="planning-notice" role="status" hidden></p>
+  <div id="v4-notice" class="planning-notice notice-dismissible" role="status" hidden>
+  <span id="v4-notice-text"></span>
+  <button id="v4-notice-close" class="icon-btn" type="button"  aria-label="Dismiss the v4 migration notice"><svg class="ic" aria-hidden="true"><use href="#ic-close"></use></svg></button>
+  </div>
+  <p id="autopost-notice" class="planning-notice" role="status" hidden></p>
+  <section id="budget-panel" class="card sheet-panel" hidden>
+  <div class="card-head"><div><p class="eyebrow">Monthly plan · optional</p><h2>Budget / actual / gap</h2></div><button id="improvement-start" type="button" class="ghost-btn">Start an improvement</button></div>
+  <p class="note">How this works <span class="hint"><button type="button" class="hint-btn" aria-label="About budget, actual and gap" aria-expanded="false" aria-controls="hint-budget-rules"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-budget-rules" role="note" aria-live="polite" hidden>Blank = not budgeted yet; 0 = a zero target. Gap = budget − actual, so negative means overspent. Every expense category may or may not be used.</span></span></p>
+  <p id="improvement-warning" class="planning-notice" hidden>Actual cash flow is negative this month. An improvement simulates a tighter budget — it does not change spending that already happened.</p>
+  <div class="sheet-scroll" tabindex="0"  aria-label="Budget table"><table class="budget-table"><thead><tr><th>Expense category</th><th>Budget (Rp)</th><th>Actual</th><th>Gap</th></tr></thead><tbody id="budget-rows"></tbody><tfoot id="budget-total"></tfoot></table></div>
+  <div class="budget-savebar" id="budget-savebar">
+  <p id="budget-dirty" class="note" role="status" aria-live="polite">No unsaved changes.</p>
+  <button id="budget-discard" class="ghost-btn" type="button" disabled>Discard changes</button>
+  <button id="budget-save" class="primary" type="button" disabled>Save changes</button>
+  </div>
 
-      <section id="settings-panel">
-        <h3>Saldo awal &amp; panduan</h3>
-        <p class="hint">Saldo awal dipakai untuk “Saldo saat ini”: saldo awal + seluruh pemasukan − seluruh pengeluaran tercatat. Bukan saldo rekening bank dan bukan tabungan.</p>
-        <form id="opening-form" novalidate>
-          <label for="opening-balance">Saldo awal (Rp)</label>
-          <div class="inline-form">
-            <input id="opening-balance" inputmode="numeric" pattern="[0-9]*" placeholder="0">
-            <button id="opening-save" class="ghost-btn" type="submit">Simpan saldo awal</button>
-          </div>
-        </form>
-        <p id="opening-date" class="hint"></p>
-        <button id="rerun-onboarding" class="ghost-btn" type="button">Jalankan ulang panduan awal</button>
-      </section>
-    </section>
+  <section id="group-budget-block" class="group-budget-block">
+  <div class="card-head">
+  <div><p class="eyebrow">Plan by group, if you prefer</p><h3>Group budgets <span class="hint"><button type="button" class="hint-btn" aria-label="About group budgets" aria-expanded="false" aria-controls="hint-group-budget"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-group-budget" role="note" aria-live="polite" hidden>One budget for a whole group, e.g. Food &amp; Beverage. It overrides the sum of that group's category budgets for the dashboard, while each category can still have its own number. Blank means no group target.</span></span></h3></div>
+  </div>
+  <div class="sheet-scroll" tabindex="0" aria-label="Group budget table"><table class="budget-table"><thead><tr><th>Group</th><th>Budget (Rp)</th><th>Actual</th><th>Gap</th></tr></thead><tbody id="group-budget-rows"></tbody></table></div>
+  </section>
+  <section id="cat-manager" class="cat-manager" aria-labelledby="cat-title">
+  <div class="card-head">
+  <div><p class="eyebrow">Name, icon, color, order</p><h3 id="cat-title">Manage categories <span class="hint"><button type="button" class="hint-btn" aria-label="About archiving and deleting categories" aria-expanded="false" aria-controls="hint-cat-manager"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-cat-manager" role="note" aria-live="polite" hidden>Archive a category you no longer use — transaction history stays intact and still appears in reports. Delete is only offered when a category has never been used by a transaction, a budget or a savings goal.</span></span></h3></div>
+  <button id="tax-seed" class="ghost-btn" type="button" hidden>Add the category set</button>
+  <button id="cat-new" class="ghost-btn" type="button">New category</button>
+  </div>
+        
+  <form id="cat-form" hidden novalidate>
+  <h4 id="cat-form-title">New category</h4>
+  <label for="cat-name">Category name</label>
+  <input id="cat-name" maxlength="50" autocomplete="off"  placeholder="e.g. Sibling's books" aria-describedby="cat-error">
+  <label for="cat-kind">Money kind</label>
+  <select id="cat-kind"><option value="expense">Expense</option><option value="income">Income</option><option value="savings">Savings &amp; investment</option><option value="obligation">Obligation</option></select>
+  <p id="cat-error" class="field-error" role="alert" hidden></p>
+  <fieldset class="cat-icons"><legend>Icon</legend><div id="cat-icon-list" class="icon-picker" role="group"  aria-label="Pick a category icon"></div></fieldset>
+  <fieldset class="cat-colors"><legend>Color</legend><div id="cat-color-list" class="color-picker" role="group"  aria-label="Pick a category color"></div></fieldset>
+  <div class="onb-actions">
+  <button id="cat-save" class="primary" type="submit">Save category</button>
+  <button id="cat-cancel" class="ghost-btn" type="button">Cancel</button>
+  </div>
+  </form>
+  <ul id="cat-list" class="cat-list"  aria-label="Expense category list"></ul>
+  <p id="cat-status" class="note" role="status" aria-live="polite"></p>
+  </section>
+  <section id="cat-unbudgeted" class="cat-unbudgeted" hidden>
+  <h3>Categories without a budget <span class="hint"><button type="button" class="hint-btn" aria-label="About categories without a budget" aria-expanded="false" aria-controls="hint-cat-unbudgeted"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-cat-unbudgeted" role="note" aria-live="polite" hidden>No budget for this month yet. Create one right from the row — the amount can change any time.</span></span></h3>
+        
+  <ul id="cat-unbudgeted-list" class="cat-unbudgeted-list"></ul>
+  </section>
+  <section id="scenario-panel" hidden><h3>Improvement · simulation only <span class="hint"><button type="button" class="hint-btn" aria-label="About the improvement simulation" aria-expanded="false" aria-controls="hint-scenario"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-scenario" role="note" aria-live="polite" hidden>One saved simulation per month. It never replaces the active budget or your transactions. Even for a past month, this projection does not change the actual remainder. The baseline uses the budget, or the actual figure when no budget exists (labeled as such).</span></span></h3><label for="scenario-income">Assumed income (Rp) · editable</label><input id="scenario-income" type="text" inputmode="numeric" data-money><p id="scenario-state" class="note"></p><div class="sheet-scroll"><table><thead><tr><th>Category</th><th>Active budget</th><th>Actual</th><th>Baseline / source</th><th>Proposed (Rp)</th><th>Reduction</th></tr></thead><tbody id="scenario-rows"></tbody></table></div><p id="scenario-totals"></p><button id="scenario-save" type="button" class="primary">Save simulation separately</button></section>
+  </section>
+  <section id="savings-panel" class="card sheet-panel" hidden>
+  <div class="card-head">
+  <div><p class="eyebrow">Money you keep, not money you spend</p><h2>Savings goals <span class="hint"><button type="button" class="hint-btn" aria-label="About savings goals" aria-expanded="false" aria-controls="hint-goals"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-goals" role="note" aria-live="polite" hidden>A goal tracks money you set aside. Contributions are recorded as Savings entries, so they never count as expenses. “Already saved” is your starting amount; every contribution after that is added on top.</span></span></h2></div>
+  <button id="goal-new" class="ghost-btn" type="button">New goal</button>
+  </div>
 
-    <section id="accounts-panel" class="card sheet-panel" hidden>
-      <div class="card-head">
-        <div><p class="eyebrow">Dompet, bank, e-wallet, investasi</p><h2>Akun &amp; Aset</h2></div>
-        <div class="panel-actions">
-          <button id="account-new" class="ghost-btn" type="button">Tambah akun</button>
-          <button id="transfer-new" class="ghost-btn" type="button">Pindah dana</button>
-        </div>
-      </div>
-      <p class="hint">Saldo akun = saldo awal + pemasukan − pengeluaran + pindah dana masuk − keluar. Investasi memakai nilai manual (rincian aset atau nilai kini); <b>tidak ada feed harga pasar</b>. Pindah dana tidak pernah dihitung pemasukan/pengeluaran atau mengubah anggaran.</p>
-      <div id="asset-totals" class="asset-totals"></div>
-      <p id="accounts-notice" class="planning-notice" role="status" hidden></p>
-      <div id="account-cards" class="account-grid"></div>
+  <div id="goal-summary" class="goal-summary"></div>
+  <div id="goal-cards" class="goal-grid"></div>
+  <div id="goal-empty" class="empty" hidden>
+  <span class="empty-symbol" aria-hidden="true">◎</span>
+  <h3>No savings goal yet.</h3>
+  <p>Start with a template below, or create your own.</p>
+  </div>
 
-      <form id="account-form" hidden novalidate>
-        <h3 id="account-form-title">Tambah akun</h3>
-        <label for="acc-name">Nama akun</label>
-        <input id="acc-name" maxlength="40" placeholder="BCA" autocomplete="off">
-        <div class="form-pair">
-          <div><label for="acc-type">Jenis</label><select id="acc-type"></select></div>
-          <div><label for="acc-opening">Saldo awal (Rp)</label><input id="acc-opening" inputmode="numeric" pattern="[0-9]*" placeholder="0"></div>
-        </div>
-        <div class="form-pair">
-          <div><label for="acc-color">Warna</label><select id="acc-color"></select></div>
-          <div><label for="acc-current">Nilai kini (khusus investasi, manual)</label><input id="acc-current" inputmode="numeric" pattern="[0-9]*" placeholder="0"></div>
-        </div>
-        <label for="acc-note">Catatan <span class="optional">opsional</span></label>
-        <input id="acc-note" maxlength="200" placeholder="Mis. rekening gaji">
-        <p id="acc-warning" class="hint" hidden>Mengubah saldo awal akan menghitung ulang saldo akun ini. Riwayat transaksi tidak diubah.</p>
-        <div class="onb-actions">
-          <button id="acc-save" class="primary" type="submit">Simpan akun</button>
-          <button id="acc-cancel" class="ghost-btn" type="button">Batal</button>
-        </div>
-      </form>
+  <div class="goal-templates">
+  <p class="eyebrow">Start from a template <span class="hint"><button type="button" class="hint-btn" aria-label="About goal templates" aria-expanded="false" aria-controls="hint-goal-templates"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-goal-templates" role="note" aria-live="polite" hidden>These are examples only, not seeded data. Nothing is created until you tap one, and you can rename or delete it afterwards.</span></span></p>
+  <div id="goal-template-list" class="template-row"></div>
+  </div>
 
-      <form id="transfer-form" hidden novalidate>
-        <h3 id="transfer-form-title">Pindah dana</h3>
-        <p class="hint">Memindahkan uang antar akun sendiri. Bukan pemasukan, bukan pengeluaran.</p>
-        <div class="form-pair">
-          <div><label for="tr-from">Dari akun</label><select id="tr-from"></select></div>
-          <div><label for="tr-to">Ke akun</label><select id="tr-to"></select></div>
-        </div>
-        <div class="form-pair">
-          <div><label for="tr-amount">Nominal (Rp)</label><input id="tr-amount" inputmode="numeric" pattern="[0-9]*" placeholder="0"></div>
-          <div><label for="tr-date">Tanggal</label><input id="tr-date" type="date"></div>
-        </div>
-        <label for="tr-note">Catatan <span class="optional">opsional</span></label>
-        <input id="tr-note" maxlength="200" placeholder="Mis. tarik tunai">
-        <div class="onb-actions">
-          <button id="tr-save" class="primary" type="submit">Simpan pindah dana</button>
-          <button id="tr-cancel" class="ghost-btn" type="button">Batal</button>
-        </div>
-      </form>
+  <form id="goal-form" hidden novalidate>
+  <h3 id="goal-form-title">New savings goal</h3>
+  <label for="goal-name">Goal name</label>
+  <input id="goal-name" maxlength="50" autocomplete="off" placeholder="e.g. Emergency Fund">
+  <div class="form-pair">
+  <div><label for="goal-target">Target (Rp)</label><input id="goal-target" inputmode="numeric" pattern="[0-9]*" placeholder="15000000" data-money></div>
+  <div><label for="goal-saved">Already saved (Rp) <span class="optional">optional</span></label><input id="goal-saved" inputmode="numeric" pattern="[0-9]*" placeholder="0" data-money></div>
+  </div>
+  <div class="form-pair">
+  <div><label for="goal-deadline">Target date <span class="optional">optional</span></label><input id="goal-deadline" type="date" min="0001-01-01" max="9999-12-31"></div>
+  <div><label for="goal-account">Account <span class="optional">optional</span></label><select id="goal-account"></select></div>
+  </div>
+  <fieldset class="cat-icons"><legend>Icon</legend><div id="goal-icon-list" class="icon-picker" role="group" aria-label="Pick a goal icon"></div></fieldset>
+  <fieldset class="cat-colors"><legend>Color</legend><div id="goal-color-list" class="color-picker" role="group" aria-label="Pick a goal color"></div></fieldset>
+  <p id="goal-error" class="field-error" role="alert" hidden></p>
+  <div class="onb-actions">
+  <button id="goal-save" class="primary" type="submit">Save goal</button>
+  <button id="goal-cancel" class="ghost-btn" type="button">Cancel</button>
+  </div>
+  </form>
 
-      <div class="sheet-scroll" tabindex="0" aria-label="Riwayat pindah dana">
-        <table>
-          <thead><tr><th>Pindah dana</th><th>Nominal</th><th>Tanggal</th><th>Aksi</th></tr></thead>
-          <tbody id="transfer-rows"></tbody>
-        </table>
-      </div>
+  <details id="goal-archived-wrap" class="category-manager" hidden>
+  <summary>Archived goals</summary>
+  <ul id="goal-archived" class="cat-list"></ul>
+  </details>
+  <p id="goal-status" class="note" role="status" aria-live="polite"></p>
+  </section>
+  <section id="reports-panel" hidden>
+  <div class="card report-hub">
+  <div class="card-head">
+  <div><p class="eyebrow">Every export, every detail</p><h2>Reports <span class="hint"><button type="button" class="hint-btn" aria-label="About reports and exports" aria-expanded="false" aria-controls="hint-reports"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-reports" role="note" aria-live="polite" hidden>PDF and CSV always cover the whole selected month, ignoring search filters. Savings goals get their own CSV. JSON is a full backup of every month; importing only adds missing rows and never deletes anything.</span></span></h2></div>
+  </div>
+  <button id="print" class="primary wide" type="button"><svg class="ic" aria-hidden="true"><use href="#ic-print"></use></svg> Print / save PDF</button>
+  <div class="report-exports"><button id="csv-budget" class="ghost-btn" type="button">Budget CSV</button><button id="csv-daily" class="ghost-btn" type="button">Daily CSV</button><button id="csv-scenario" class="ghost-btn" type="button">Improvement CSV</button><button id="csv-goals" class="ghost-btn" type="button">Savings goals CSV</button></div>
+  <div class="export-pair">
+  <button id="csv" class="ghost-btn" type="button"><svg class="ic" aria-hidden="true"><use href="#ic-download"></use></svg> This month's CSV</button>
+  <button id="json" class="ghost-btn" type="button"><svg class="ic" aria-hidden="true"><use href="#ic-download"></use></svg> JSON backup</button>
+  </div>
+  <button id="import" class="ghost-btn wide" type="button"><svg class="ic" aria-hidden="true"><use href="#ic-upload"></use></svg> Restore from backup</button>
+  <input id="import-file" type="file" accept="application/json,.json" hidden>
+  </div>
 
-      <section id="investment-detail" hidden>
-        <div class="card-head"><div><p class="eyebrow">Investasi · nilai manual</p><h3 id="inv-title">—</h3></div><button id="inv-close" class="ghost-btn" type="button">Tutup</button></div>
-        <p id="inv-meta" class="hint"></p>
-        <div class="sheet-scroll" tabindex="0" aria-label="Rincian aset investasi">
-          <table>
-            <thead><tr><th>Nama aset</th><th>Jenis</th><th>Jumlah</th><th>Harga beli rata-rata</th><th>Harga kini (manual)</th><th>Nilai</th><th>Aksi</th></tr></thead>
-            <tbody id="holding-rows"></tbody>
-          </table>
-        </div>
-        <div class="onb-actions">
-          <button id="holding-new" class="ghost-btn" type="button">Tambah aset</button>
-          <button id="holding-save-all" class="primary" type="button">Simpan perubahan</button>
-        </div>
-        <p id="holding-dirty" class="hint" hidden>Ada perubahan belum disimpan.</p>
-        <p class="hint">Nilai investasi = jumlah (jumlah × harga kini). P/L = nilai − biaya beli. Harga diisi manual oleh Anda, bukan kutipan pasar.</p>
-        <div class="value-update">
-          <label for="inv-value">Perbarui nilai kini akun (manual)</label>
-          <div class="inline-form"><input id="inv-value" inputmode="numeric" pattern="[0-9]*" placeholder="0"><button id="inv-value-save" class="ghost-btn" type="button">Perbarui nilai</button></div>
-          <label for="inv-note">Catatan nilai <span class="optional">opsional</span></label>
-          <input id="inv-note" maxlength="200" placeholder="Mis. perkiraan akhir bulan">
-        </div>
-        <h4>Riwayat perubahan nilai</h4>
-        <div class="sheet-scroll"><table><thead><tr><th>Tanggal</th><th>Nilai</th><th>Perubahan</th><th>Catatan</th><th>Aksi</th></tr></thead><tbody id="valuation-rows"></tbody></table></div>
-        <div id="inv-chart" class="mini-chart"></div>
-      </section>
+  <nav class="report-subnav" id="report-subnav" aria-label="Report detail">
+  <button type="button" data-report="daily" aria-pressed="true">Daily recap</button>
+  <button type="button" data-report="recurring" aria-pressed="false">Recurring income</button>
+  <button type="button" data-report="accounts" aria-pressed="false">Accounts &amp; assets</button>
+  </nav>
+  </section>
+  <section id="daily-panel" class="card sheet-panel" hidden>
+  <div class="recap-head">
+  <div><p class="eyebrow">All expenses in the selected month</p><h2>Daily recap <span class="hint"><button type="button" class="hint-btn" aria-label="About the daily recap" aria-expanded="false" aria-controls="hint-daily-recap"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-daily-recap" role="note" aria-live="polite" hidden>One card per date. Tap a category row to see the time and note of each transaction. Income is never counted as an expense.</span></span></h2></div>
+  <div class="recap-nav" role="group"  aria-label="Pick recap month">
+  <button id="recap-prev" class="icon-btn round" type="button"  aria-label="Previous month"><svg class="ic" aria-hidden="true"><use href="#ic-chevron"></use></svg></button>
+  <span id="recap-month" class="recap-month">…</span>
+  <button id="recap-next" class="icon-btn round flip" type="button"  aria-label="Next month"><svg class="ic" aria-hidden="true"><use href="#ic-chevron"></use></svg></button>
+  </div>
+  </div>
+      
+  <div class="recap-quick" role="group"  aria-label="Jump to day">
+  <button id="recap-today" class="ghost-btn" type="button">Today</button>
+  <button id="recap-yesterday" class="ghost-btn" type="button">Yesterday</button>
+  </div>
+  <div id="recap-totals" class="recap-totals" aria-live="polite"></div>
+  <div id="recap-days" class="recap-days"></div>
+  <div id="recap-empty" class="empty" hidden>
+  <span class="empty-symbol" aria-hidden="true">＋</span>
+  <h3>No entries this month.</h3>
+  <p>Pick another month with the arrows above,<br>or record your first expense.</p>
+  </div>
+  <div id="recap-sticky" class="recap-sticky" aria-live="polite"></div>
+  <details class="recap-matrix">
+  <summary>Full table, all categories</summary>
+  <div id="daily-scroll" class="sheet-scroll" tabindex="0"  aria-label="Scroll the daily recap table"><table id="daily-table"></table></div>
+  </details>
+  </section>
+  <section id="recurring-panel" class="card sheet-panel" hidden>
+  <div class="card-head">
+  <div><p class="eyebrow">Automatic, still in control</p><h2>Recurring income <span class="hint"><button type="button" class="hint-btn" aria-label="About recurring income schedules" aria-expanded="false" aria-controls="hint-schedule"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-schedule" role="note" aria-live="polite" hidden>For a salary or fixed income. If the date has already passed, Kantong records it once per month — including months missed since the start month. Day 31 in a short month uses the last day. Editing a schedule only affects future postings; rows already recorded can still be edited or deleted like any transaction.</span></span></h2></div>
+  <button id="schedule-new" class="ghost-btn" type="button">Add schedule</button>
+  </div>
+      
+  <p id="recurring-notice" class="note" role="status"></p>
+  <div class="sheet-scroll" tabindex="0"  aria-label="Recurring income schedule list">
+  <table class="schedule-table">
+  <thead><tr><th>Schedule</th><th>Amount</th><th>Period</th><th>Status</th><th>Actions</th></tr></thead>
+  <tbody id="schedule-rows"></tbody>
+  </table>
+  </div>
+  <form id="schedule-form" novalidate hidden>
+  <h3 id="schedule-form-title">Add schedule</h3>
+  <label for="sched-name">Income name</label>
+  <input id="sched-name" maxlength="50"  placeholder="Monthly salary" autocomplete="off">
+  <div class="form-pair">
+  <div><label for="sched-amount">Amount (Rp)</label><input id="sched-amount" inputmode="numeric" pattern="[0-9]*"  placeholder="5000000" data-money></div>
+  <div><label for="sched-day">Pay date (1–31)</label><input id="sched-day" inputmode="numeric" pattern="[0-9]*"  placeholder="25"></div>
+  </div>
+  <div class="form-pair">
+  <div><label for="sched-start">Start month</label><input id="sched-start" type="month" min="0001-01" max="9998-12"></div>
+  <div><label for="sched-end">End month <span class="optional">optional</span></label><input id="sched-end" type="month" min="0001-01" max="9998-12"></div>
+  </div>
+  <div class="form-pair">
+  <div><label for="sched-category">Category</label><select id="sched-category"></select></div>
+  <div class="sched-active-field"><label for="sched-active">Status</label><label class="checkline" for="sched-active"><input id="sched-active" type="checkbox" checked> Active (record automatically)</label></div>
+  </div>
+  <label for="sched-notes">Note <span class="optional">optional</span></label>
+  <input id="sched-notes" maxlength="500"  placeholder="e.g. monthly office salary">
+  <div class="onb-actions">
+  <button id="sched-save" class="primary" type="submit">Save schedule</button>
+  <button id="sched-cancel" class="ghost-btn" type="button">Cancel</button>
+  </div>
+  <p class="note">Automatic rows <span class="hint"><button type="button" class="hint-btn" aria-label="About automatic rows" aria-expanded="false" aria-controls="hint-auto-rows"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-auto-rows" role="note" aria-live="polite" hidden>Automatic rows use the note “Auto · schedule name” and can be searched like any other transaction.</span></span></p>
+  </form>
 
-      <section id="bulk-values" hidden>
-        <div class="card-head"><div><p class="eyebrow">Sekali layar</p><h3>Perbarui nilai semua akun investasi</h3></div></div>
-        <p class="hint">Isi nilai kini terbaru menurut catatan Anda. Hanya baris yang berubah yang disimpan. Harga manual, bukan feed pasar.</p>
-        <div class="sheet-scroll"><table><thead><tr><th>Akun</th><th>Nilai sekarang</th><th>Nilai baru</th><th>Catatan</th><th>Status</th></tr></thead><tbody id="bulk-rows"></tbody></table></div>
-        <div class="onb-actions">
-          <button id="bulk-save" class="primary" type="button">Simpan nilai yang berubah</button>
-          <button id="bulk-close" class="ghost-btn" type="button">Tutup</button>
-        </div>
-        <p id="bulk-status" class="hint"></p>
-      </section>
+  <section id="settings-panel">
+  <h3>Opening balance &amp; guide <span class="hint"><button type="button" class="hint-btn" aria-label="About the opening balance" aria-expanded="false" aria-controls="hint-opening"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-opening" role="note" aria-live="polite" hidden>The opening balance feeds “Current balance”: opening balance + all income − all recorded expenses. It is not a bank balance and not savings.</span></span></h3>
+        
+  <form id="opening-form" novalidate>
+  <label for="opening-balance">Opening balance (Rp)</label>
+  <div class="inline-form">
+  <input id="opening-balance" inputmode="numeric" pattern="[0-9]*"  placeholder="0" data-money>
+  <button id="opening-save" class="ghost-btn" type="submit">Save opening balance</button>
+  </div>
+  </form>
+  <p id="opening-date" class="note"></p>
+  <button id="rerun-onboarding" class="ghost-btn" type="button">Run the setup guide again</button>
+  </section>
+  </section>
 
-      <details id="activity-log" class="category-manager">
-        <summary>Riwayat perubahan (50 terakhir)</summary>
-        <ul id="activity-rows" class="activity-list"></ul>
-      </details>
-      <div class="report-exports">
-        <button id="csv-accounts" class="ghost-btn" type="button">CSV akun</button>
-        <button id="csv-holdings" class="ghost-btn" type="button">CSV aset</button>
-        <button id="csv-transfers" class="ghost-btn" type="button">CSV pindah dana</button>
-        <button id="bulk-open" class="ghost-btn" type="button">Perbarui nilai investasi</button>
-      </div>
-    </section>
-    <div class="summary">
-      <article class="card saldo-card" id="saldo-card">
-        <div class="saldo-main">
-          <p class="eyebrow">Kas tersedia menurut catatan</p>
-          <h2>Saldo saat ini</h2>
-          <p id="saldo" class="figure">—</p>
-          <p class="card-note">Saldo awal + seluruh pemasukan − seluruh pengeluaran yang tercatat, dari semua bulan. Ini kas menurut catatan Anda — bukan saldo rekening bank atau tabungan.</p>
-          <p class="card-foot" id="saldo-foot">Saldo awal: —</p>
-        </div>
-        <div class="saldo-months">
-          <table>
-            <caption class="sr">Arus kas dan saldo akhir per bulan</caption>
-            <thead><tr><th>Bulan</th><th class="number">Masuk</th><th class="number">Keluar</th><th class="number">Saldo akhir</th></tr></thead>
-            <tbody id="saldo-months"></tbody>
-          </table>
-        </div>
-      </article>
-      <article class="card aset-card" id="aset-card" hidden>
-        <div class="aset-figures">
-          <div><p class="card-top">Uang siap pakai</p><h3 id="aset-ready" class="figure small">—</h3><p class="card-note">Tunai + bank + e-wallet menurut catatan Anda.</p></div>
-          <div><p class="card-top">Total aset</p><h3 id="aset-total" class="figure small">—</h3><p class="card-note">Termasuk investasi dengan nilai manual. Bukan valuasi pasar real-time.</p></div>
-        </div>
-        <div class="aset-charts">
-          <div class="mini-block"><p class="eyebrow">Alokasi per jenis akun</p><div id="aset-donut" class="mini-donut" role="img" aria-label="Alokasi aset per jenis akun"></div></div>
-          <div class="mini-block"><p class="eyebrow">Riwayat nilai investasi</p><div id="aset-history" class="mini-chart"></div></div>
-        </div>
-        <button id="aset-open" class="ghost-btn" type="button">Kelola akun &amp; aset</button>
-      </article>
-      <article class="card balance-card">
-        <div class="card-top">
-          <p>Sisa bulan ini</p>
-          <span id="delta-out" class="delta" hidden></span>
-        </div>
-        <h2 id="balance" class="figure">—</h2>
-        <p class="card-note">Pemasukan dikurangi pengeluaran periode ini — arus kas, bukan saldo rekening.</p>
-        <p class="card-foot"><span id="daily-avg">—</span> rata-rata pengeluaran per hari</p>
-      </article>
-      <article class="card">
-        <p class="card-top"><span class="dot in" aria-hidden="true"></span> Pemasukan</p>
-        <h3 id="income" class="figure small">—</h3>
-        <p class="card-note" id="income-note">Yang masuk ke kantong</p>
-      </article>
-      <article class="card">
-        <p class="card-top"><span class="dot out" aria-hidden="true"></span> Pengeluaran</p>
-        <h3 id="expense" class="figure small">—</h3>
-        <p class="card-note" id="expense-note">Yang sudah Anda gunakan</p>
-      </article>
-    </div>
+  <section id="accounts-panel" class="card sheet-panel" hidden>
+  <div class="card-head">
+  <div><p class="eyebrow">Wallet, bank, e-wallet, investments</p><h2>Accounts &amp; Assets <span class="hint"><button type="button" class="hint-btn" aria-label="About account balances" aria-expanded="false" aria-controls="hint-account-balance"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-account-balance" role="note" aria-live="polite" hidden>Account balance = opening balance + income − expenses + transfers in − out. Investments use a manually entered value (asset details or current value); <b>no market price feed</b>. Transfers are never counted as income or expenses and never change budgets.</span></span></h2></div>
+  <div class="panel-actions">
+  <button id="account-new" class="ghost-btn" type="button">Add account</button>
+  <button id="transfer-new" class="ghost-btn" type="button">Transfer</button>
+  </div>
+  </div>
+      
+  <div id="asset-totals" class="asset-totals"></div>
+  <p id="accounts-notice" class="planning-notice" role="status" hidden></p>
+  <div id="account-cards" class="account-grid"></div>
 
-    <div class="insights">
-      <section class="card chart-card">
-        <div class="card-head">
-          <div>
-            <p class="eyebrow">Enam bulan terakhir</p>
-            <h2>Tren masuk &amp; keluar</h2>
-          </div>
-          <ul class="legend-inline">
-            <li><span class="dot in" aria-hidden="true"></span> Masuk</li>
-            <li><span class="dot out" aria-hidden="true"></span> Keluar</li>
-          </ul>
-        </div>
-        <div class="chart-bars" id="chart-bars" role="img" aria-label="Grafik pemasukan dan pengeluaran enam bulan"></div>
-      </section>
+  <form id="account-form" hidden novalidate>
+  <h3 id="account-form-title">Add account</h3>
+  <label for="acc-name">Account name</label>
+  <input id="acc-name" maxlength="40"  placeholder="BCA" autocomplete="off">
+  <div class="form-pair">
+  <div><label for="acc-type">Type</label><select id="acc-type"></select></div>
+  <div><label for="acc-opening">Opening balance (Rp)</label><input id="acc-opening" inputmode="numeric" pattern="[0-9]*"  placeholder="0" data-money></div>
+  </div>
+  <div class="form-pair">
+  <div><label for="acc-color">Color</label><select id="acc-color"></select></div>
+  <div><label for="acc-current">Current value (investments only, manual)</label><input id="acc-current" inputmode="numeric" pattern="[0-9]*"  placeholder="0" data-money></div>
+  </div>
+  <label for="acc-note">Note <span class="optional">optional</span></label>
+  <input id="acc-note" maxlength="200"  placeholder="e.g. salary account">
+  <p id="acc-warning" class="note" hidden>Changing the opening balance recalculates this account's balance. Transaction history is untouched.</p>
+  <div class="onb-actions">
+  <button id="acc-save" class="primary" type="submit">Save account</button>
+  <button id="acc-cancel" class="ghost-btn" type="button">Cancel</button>
+  </div>
+  </form>
 
-      <section class="card donut-card">
-        <div class="card-head">
-          <div>
-            <p class="eyebrow">Ke mana uang pergi</p>
-            <h2>Pengeluaran per kategori</h2>
-          </div>
-        </div>
-        <div class="donut-wrap">
-          <div id="categories" class="donut" role="img" aria-label="Komposisi pengeluaran per kategori"></div>
-          <ul id="legend" class="legend"></ul>
-        </div>
-      </section>
-    </div>
+  <form id="transfer-form" hidden novalidate>
+  <h3 id="transfer-form-title">Transfer</h3>
+  <p class="note">Moves money between your own accounts. Not income, not an expense.</p>
+  <div class="form-pair">
+  <div><label for="tr-from">From account</label><select id="tr-from"></select></div>
+  <div><label for="tr-to">To account</label><select id="tr-to"></select></div>
+  </div>
+  <div class="form-pair">
+  <div><label for="tr-amount">Amount (Rp)</label><input id="tr-amount" inputmode="numeric" pattern="[0-9]*"  placeholder="0" data-money></div>
+  <div><label for="tr-date">Date</label><input id="tr-date" type="date"></div>
+  </div>
+  <label for="tr-note">Note <span class="optional">optional</span></label>
+  <input id="tr-note" maxlength="200"  placeholder="e.g. cash withdrawal">
+  <div class="onb-actions">
+  <button id="tr-save" class="primary" type="submit">Save transfer</button>
+  <button id="tr-cancel" class="ghost-btn" type="button">Cancel</button>
+  </div>
+  </form>
 
-    <div class="body-grid">
-      <div class="ledger">
-        <section class="card transactions">
-          <div class="card-head">
-            <div>
-              <p class="eyebrow">Catatan harian</p>
-              <h2>Transaksi <span id="count" class="count">0</span></h2>
-            </div>
-            <button id="refresh" class="ghost-btn" type="button">
-              <svg class="ic" aria-hidden="true"><use href="#ic-refresh"></use></svg> Muat ulang
-            </button>
-          </div>
+  <div class="sheet-scroll" tabindex="0"  aria-label="Transfer history">
+  <table>
+  <thead><tr><th>Transfer</th><th>Amount</th><th>Date</th><th>Actions</th></tr></thead>
+  <tbody id="transfer-rows"></tbody>
+  </table>
+  </div>
 
-          <div class="toolbar">
-            <label class="search" for="search">
-              <svg class="ic" aria-hidden="true"><use href="#ic-search"></use></svg>
-              <input id="search" type="search" placeholder="Cari catatan…" autocomplete="off">
-            </label>
-            <select id="ftype" aria-label="Saring jenis transaksi">
-              <option value="">Semua jenis</option>
-              <option value="expense">Pengeluaran</option>
-              <option value="income">Pemasukan</option>
-            </select>
-            <select id="fcat" aria-label="Saring kategori">
-              <option value="">Semua kategori</option>
-            </select>
-            <span id="filter-count" class="filter-count" aria-live="polite"></span>
-          </div>
+  <section id="investment-detail" hidden>
+  <div class="card-head"><div><p class="eyebrow">Investments · manual value</p><h3 id="inv-title">—</h3></div><button id="inv-close" class="ghost-btn" type="button">Close</button></div>
+  <p id="inv-meta" class="note"></p>
+  <div class="sheet-scroll" tabindex="0"  aria-label="Investment asset details">
+  <table>
+  <thead><tr><th>Asset name</th><th>Type</th><th>Amount</th><th>Average buy price</th><th>Current price (manual)</th><th>Value</th><th>Actions</th></tr></thead>
+  <tbody id="holding-rows"></tbody>
+  </table>
+  </div>
+  <div class="onb-actions">
+  <button id="holding-new" class="ghost-btn" type="button">Add asset</button>
+  <button id="holding-save-all" class="primary" type="button">Save changes</button>
+  </div>
+  <p id="holding-dirty" class="note" hidden>Unsaved changes.</p>
+  <p class="note">How values are calculated <span class="hint"><button type="button" class="hint-btn" aria-label="About investment value and P/L" aria-expanded="false" aria-controls="hint-valuation"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-valuation" role="note" aria-live="polite" hidden>Investment value = quantity × current price. P/L = value − cost. Prices are entered by you, not market quotes.</span></span></p>
+  <div class="value-update">
+  <label for="inv-value">Update current account value (manual)</label>
+  <div class="inline-form"><input id="inv-value" inputmode="numeric" pattern="[0-9]*"  placeholder="0" data-money><button id="inv-value-save" class="ghost-btn" type="button">Update value</button></div>
+  <label for="inv-note">Value note <span class="optional">optional</span></label>
+  <input id="inv-note" maxlength="200"  placeholder="e.g. end-of-month estimate">
+  </div>
+  <h4>Value change history</h4>
+  <div class="sheet-scroll"><table><thead><tr><th>Date</th><th>Value</th><th>Change</th><th>Note</th><th>Actions</th></tr></thead><tbody id="valuation-rows"></tbody></table></div>
+  <div id="inv-chart" class="mini-chart"></div>
+  </section>
 
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr><th scope="col">Tanggal / catatan</th><th scope="col">Kategori</th><th scope="col" class="number">Nominal</th><th scope="col" class="actions"><span class="sr">Aksi</span></th></tr>
-              </thead>
-              <tbody id="rows"></tbody>
-            </table>
-          </div>
+  <section id="bulk-values" hidden>
+  <div class="card-head"><div><p class="eyebrow">All at once</p><h3>Update the value of every investment account <span class="hint"><button type="button" class="hint-btn" aria-label="About updating investment values" aria-expanded="false" aria-controls="hint-bulk-values"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-bulk-values" role="note" aria-live="polite" hidden>Enter the latest current value from your own records. Only changed rows are saved. Manual prices, not a market feed.</span></span></h3></div></div>
+        
+  <div class="sheet-scroll"><table><thead><tr><th>Accounts</th><th>Current value</th><th>New value</th><th>Note</th><th>Status</th></tr></thead><tbody id="bulk-rows"></tbody></table></div>
+  <div class="onb-actions">
+  <button id="bulk-save" class="primary" type="button">Save changed values</button>
+  <button id="bulk-close" class="ghost-btn" type="button">Close</button>
+  </div>
+  <p id="bulk-status" class="note"></p>
+  </section>
 
-          <div id="empty" class="empty">
-            <span class="empty-symbol" aria-hidden="true">＋</span>
-            <h3>Awali dengan satu catatan.</h3>
-            <p>Belum ada transaksi pada periode ini.<br>Tambahkan pemasukan atau pengeluaran pertama Anda.</p>
-          </div>
+  <details id="activity-log" class="category-manager">
+  <summary>Change history (last 50)</summary>
+  <ul id="activity-rows" class="activity-list"></ul>
+  </details>
+  <div class="report-exports">
+  <button id="csv-accounts" class="ghost-btn" type="button">Accounts CSV</button>
+  <button id="csv-holdings" class="ghost-btn" type="button">Assets CSV</button>
+  <button id="csv-transfers" class="ghost-btn" type="button">Transfers CSV</button>
+  <button id="bulk-open" class="ghost-btn" type="button">Update investment values</button>
+  </div>
+  </section>
+  <section id="dash-panel" class="dash-panel">
+  <div class="metric-grid">
+  <article class="card metric">
+  <p class="card-top"><span class="dot in" aria-hidden="true"></span> Total income <span class="hint"><button type="button" class="hint-btn" aria-label="About total income" aria-expanded="false" aria-controls="hint-m-income"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-m-income" role="note" aria-live="polite" hidden>Every Income entry dated in this month. Investment returns count as income here, not as savings.</span></span></p>
+  <h3 id="income" class="figure small">—</h3>
+  <p class="card-note" id="income-note">What came in</p>
+  </article>
+  <article class="card metric">
+  <p class="card-top"><span class="dot out" aria-hidden="true"></span> Total expense <span class="hint"><button type="button" class="hint-btn" aria-label="About total expense" aria-expanded="false" aria-controls="hint-m-expense"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-m-expense" role="note" aria-live="polite" hidden>Spending only. Savings and obligation entries are never counted here, so putting money aside does not look like spending.</span></span></p>
+  <h3 id="expense" class="figure small">—</h3>
+  <p class="card-note" id="expense-note">What went out</p>
+  </article>
+  <article class="card metric">
+  <p class="card-top">Total savings <span class="hint"><button type="button" class="hint-btn" aria-label="About total savings" aria-expanded="false" aria-controls="hint-m-savings"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-m-savings" role="note" aria-live="polite" hidden>Savings entries plus investments (gold, mutual funds, stocks, time deposit) recorded this month. Transfers between your own accounts are not savings entries.</span></span></p>
+  <h3 id="m-savings" class="figure small">—</h3>
+  <p class="card-note" id="m-savings-note">Kept this month</p>
+  </article>
+  <article class="card metric balance-card">
+  <p class="card-top">Remaining balance <span class="hint"><button type="button" class="hint-btn" aria-label="About the remaining balance" aria-expanded="false" aria-controls="hint-m-remaining"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-m-remaining" role="note" aria-live="polite" hidden>Income − expenses − savings − obligations for this month. Money you moved into savings is not lost, it is just not spendable; obligations are already committed. This is cash flow, not a bank balance.</span></span></p>
+  <h2 id="balance" class="figure">—</h2>
+  <p><span id="delta-out" class="delta" hidden></span></p>
+  <p class="card-foot"><span id="daily-avg">—</span> average spend per day</p>
+  </article>
+  <article class="card metric">
+  <p class="card-top">Saving rate <span class="hint"><button type="button" class="hint-btn" aria-label="About the saving rate" aria-expanded="false" aria-controls="hint-m-rate"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-m-rate" role="note" aria-live="polite" hidden>Savings ÷ income for this month. With no income recorded the rate is shown as “—” instead of a misleading 0%.</span></span></p>
+  <h3 id="m-rate" class="figure small">—</h3>
+  <p class="card-note" id="m-rate-note">Savings ÷ income</p>
+  </article>
+  </div>
 
-          <div class="ledger-foot">
-            <span>Seluruh transaksi periode terpilih</span>
-            <span id="period-label"></span>
-          </div>
-        </section>
+  <div class="insights">
+  <section class="card chart-card">
+  <div class="card-head">
+  <div>
+  <p class="eyebrow">Last six months</p>
+  <h2>In and out trend</h2>
+  </div>
+  <ul class="legend-inline">
+  <li><span class="dot in" aria-hidden="true"></span> In</li>
+  <li><span class="dot out" aria-hidden="true"></span> Out</li>
+  </ul>
+  </div>
+  <div class="chart-bars" id="chart-bars" role="img"  aria-label="Six-month income and expense chart"></div>
+  </section>
 
-        <section class="card top-expenses">
-          <div class="card-head">
-            <div>
-              <p class="eyebrow">Paling menguras</p>
-              <h2>Pengeluaran terbesar</h2>
-            </div>
-          </div>
-          <ol id="top-list" class="top-list"></ol>
-        </section>
-      </div>
+  <section class="card donut-card">
+  <div class="card-head">
+  <div>
+  <p class="eyebrow">Grouped, not one category at a time</p>
+  <h2>Expenses by group <span class="hint"><button type="button" class="hint-btn" aria-label="About expense groups" aria-expanded="false" aria-controls="hint-group-donut"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-group-donut" role="note" aria-live="polite" hidden>Each slice is one of the eight spending groups. Individual subcategories are still available in Transactions and in the Budget table.</span></span></h2>
+  </div>
+  </div>
+  <div class="donut-wrap">
+  <div id="categories" class="donut" role="img"  aria-label="Expense mix by group"></div>
+  <ul id="legend" class="legend"></ul>
+  </div>
+  </section>
+  </div>
 
-      <aside class="side">
-        <section class="card entry-panel" id="entry-panel">
-          <div class="card-head">
-            <div>
-              <p class="eyebrow">Sedikit demi sedikit</p>
-              <h2 id="form-title">Catat transaksi</h2>
-            </div>
-            <button class="icon-btn close-sheet" type="button" id="sheet-close" aria-label="Tutup formulir"><svg class="ic" aria-hidden="true"><use href="#ic-close"></use></svg></button>
-          </div>
+  <section class="card insights-card" id="insights-card">
+  <div class="card-head">
+  <div><p class="eyebrow">What the numbers say</p><h2>Financial insights <span class="hint"><button type="button" class="hint-btn" aria-label="About financial insights" aria-expanded="false" aria-controls="hint-insights"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-insights" role="note" aria-live="polite" hidden>Computed from this month's entries only. The last-month comparison uses expenses of the same length; “average per day” divides by the days elapsed so far, not by the whole month. Budget vs actual sums the budgets of each group's subcategories unless you set a group budget.</span></span></h2></div>
+  </div>
+  <ul id="insight-list" class="insight-list"></ul>
+  <div id="group-budget-list" class="group-budget-list"></div>
+  </section>
 
-          <div class="quick" id="quick" aria-label="Isi cepat">
-            <button type="button" data-q-type="expense" data-q-cat="Makan" data-q-amount="25000" data-q-note="Makan">Makan</button>
-            <button type="button" data-q-type="expense" data-q-cat="Transportasi" data-q-amount="15000" data-q-note="Transport">Transport</button>
-            <button type="button" data-q-type="expense" data-q-cat="Belanja" data-q-amount="50000" data-q-note="Belanja harian">Belanja</button>
-            <button type="button" data-q-type="expense" data-q-cat="Tagihan" data-q-amount="100000" data-q-note="Tagihan">Tagihan</button>
-          </div>
-          <div class="quick quick-date" id="quick-date" aria-label="Tanggal cepat">
-            <button type="button" data-quickdate="0">Hari ini</button>
-            <button type="button" data-quickdate="1">Kemarin</button>
-          </div>
+  <section class="card goal-mini" id="dash-goals">
+  <div class="card-head">
+  <div><p class="eyebrow">Money you keep</p><h2>Savings goals <span class="hint"><button type="button" class="hint-btn" aria-label="About savings goals on the dashboard" aria-expanded="false" aria-controls="hint-dash-goals"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-dash-goals" role="note" aria-live="polite" hidden>Progress counts your starting amount plus every Savings entry linked to the goal, across all months.</span></span></h2></div>
+  <button id="dash-goal-open" class="ghost-btn" type="button">Open Savings Goals</button>
+  </div>
+  <ul id="dash-goal-list" class="goal-mini-list"></ul>
+  </section>
 
-          <form id="entry" novalidate>
-            <fieldset id="entry-fields">
-              <div class="seg" role="group" aria-label="Jenis transaksi">
-                <label><input type="radio" name="type" value="expense" checked><span>Pengeluaran</span></label>
-                <label><input type="radio" name="type" value="income"><span>Pemasukan</span></label>
-              </div>
-              <label for="amount">Nominal (Rp)</label>
-              <input id="amount" name="amount" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="0" required aria-describedby="amount-help">
-              <small id="amount-help" class="hint">Rupiah bulat, tanpa titik atau koma.</small>
-              <div class="form-pair">
-                <div>
-                  <label for="date">Tanggal</label>
-                  <input id="date" name="date" type="date" min="0001-01-01" max="9999-12-31" required>
-                </div>
-                <div>
-                  <label for="category">Kategori</label>
-                  <select id="category" name="category"></select>
-                </div>
-              </div>
-              <small id="date-hint" class="hint">Boleh tanggal lampau. Tanggal setelah hari ini ditolak.</small>
-              <div id="account-field" hidden>
-                <label for="account">Akun</label>
-                <div class="inline-form">
-                  <select id="account"></select>
-                  <button id="open-transfer" class="ghost-btn" type="button">Pindah dana</button>
-                </div>
-                <small class="hint">Pindah dana antar akun tidak dihitung pemasukan/pengeluaran.</small>
-              </div>
-              <label for="notes">Catatan <span class="optional">opsional</span></label>
-              <textarea id="notes" name="notes" rows="2" maxlength="500" placeholder="Untuk apa hari ini?"></textarea>
-              <button id="save" class="primary" type="submit">Simpan transaksi</button>
-              <button id="cancel" class="ghost-btn full" type="button" hidden>Batal mengubah</button>
-            </fieldset>
-          </form>
-        </section>
+  <article class="card saldo-card" id="saldo-card">
+  <div class="saldo-main">
+  <p class="eyebrow">Cash available per your records</p>
+  <h2>Current balance <span class="hint"><button type="button" class="hint-btn" aria-label="How the current balance is calculated" aria-expanded="false" aria-controls="hint-saldo"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-saldo" role="note" aria-live="polite" hidden>Opening balance + all income − spending − obligations − money set aside in savings entries, across every month. Savings reduces spendable cash but is not lost; it is still your money. Not a bank balance.</span></span></h2>
+  <p id="saldo" class="figure">—</p>
+  <p class="card-foot" id="saldo-foot">Opening balance: —</p>
+  </div>
+  <div class="saldo-months">
+  <table>
+  <caption class="sr">Cash flow and ending balance per month</caption>
+  <thead><tr><th>Month</th><th class="number">In</th><th class="number">Out</th><th class="number">Ending balance</th></tr></thead>
+  <tbody id="saldo-months"></tbody>
+  </table>
+  </div>
+  </article>
+  <article class="card aset-card" id="aset-card" hidden>
+  <div class="aset-figures">
+  <div><p class="card-top">Spendable money</p><h3 id="aset-ready" class="figure small">—</h3><p class="card-note">Cash + bank + e-wallet per your records.</p></div>
+  <div><p class="card-top">Total assets <span class="hint"><button type="button" class="hint-btn" aria-label="About total assets" aria-expanded="false" aria-controls="hint-total-assets"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-total-assets" role="note" aria-live="polite" hidden>Includes investments at manually entered values. Not a real-time market valuation.</span></span></p><h3 id="aset-total" class="figure small">—</h3></div>
+  </div>
+  <div class="aset-charts">
+  <div class="mini-block"><p class="eyebrow">Allocation by account type</p><div id="aset-donut" class="mini-donut" role="img"  aria-label="Asset allocation by account type"></div></div>
+  <div class="mini-block"><p class="eyebrow">Investment value history</p><div id="aset-history" class="mini-chart"></div></div>
+  </div>
+  <button id="aset-open" class="ghost-btn" type="button">Manage accounts &amp; assets</button>
+  </article>
+  </section>
 
-        <section class="card export-panel">
-          <div class="card-head">
-            <div>
-              <p class="eyebrow">Simpan &amp; tinjau kembali</p>
-              <h2>Catatan, milik Anda.</h2>
-            </div>
-          </div>
-          <button id="print" class="primary wide" type="button"><svg class="ic" aria-hidden="true"><use href="#ic-print"></use></svg> Cetak / simpan PDF</button>
-          <div class="report-exports"><button id="csv-budget" class="ghost-btn" type="button">CSV anggaran</button><button id="csv-daily" class="ghost-btn" type="button">CSV harian</button><button id="csv-scenario" class="ghost-btn" type="button">CSV improvement</button></div>
-          <div class="export-pair">
-            <button id="csv" class="ghost-btn" type="button"><svg class="ic" aria-hidden="true"><use href="#ic-download"></use></svg> CSV bulan ini</button>
-            <button id="json" class="ghost-btn" type="button"><svg class="ic" aria-hidden="true"><use href="#ic-download"></use></svg> Backup JSON</button>
-          </div>
-          <button id="import" class="ghost-btn wide" type="button"><svg class="ic" aria-hidden="true"><use href="#ic-upload"></use></svg> Pulihkan dari backup</button>
-          <input id="import-file" type="file" accept="application/json,.json" hidden>
-          <p class="hint">PDF &amp; CSV: seluruh bulan terpilih, tanpa filter. PDF memuat saldo berjalan dan ringkasan pemasukan rutin. JSON v3: semua bulan, transaksi, kategori, anggaran, simulasi, jadwal rutin dan pengaturan saldo awal (v1/v2 tetap bisa dipulihkan). Impor menambah yang belum ada, tidak menimpa atau menghapus data.</p>
-        </section>
-      </aside>
-    </div>
+  <section id="tx-panel" hidden>
+  <div class="body-grid">
+  <div class="ledger">
+  <section class="card transactions">
+  <div class="card-head">
+  <div>
+  <p class="eyebrow">Daily log</p>
+  <h2>Transactions <span id="count" class="count">0</span> <span class="hint"><button type="button" class="hint-btn" aria-label="About the time shown on each row" aria-expanded="false" aria-controls="hint-tx-time"><span class="hint-dot" aria-hidden="true">i</span></button><span class="hint-panel" id="hint-tx-time" role="note" aria-live="polite" hidden>Newest first. The time is when the record was created or last edited in Kantong (Asia/Jakarta), not the date of the transaction itself. Rows saved before v7 have no edit time, so their creation time is shown.</span></span></h2>
+  </div>
+  <button id="refresh" class="ghost-btn" type="button">
+  <svg class="ic" aria-hidden="true"><use href="#ic-refresh"></use></svg> Reload
+  </button>
+  </div>
+
+  <div class="toolbar">
+  <label class="search" for="search">
+  <svg class="ic" aria-hidden="true"><use href="#ic-search"></use></svg>
+  <input id="search" type="search"  placeholder="Search notes…" autocomplete="off">
+  </label>
+  <select id="ftype"  aria-label="Filter by transaction type">
+  <option value="">All types</option>
+  <option value="expense">Expenses</option>
+  <option value="income">Income</option>
+  <option value="savings">Savings</option>
+  <option value="obligation">Obligations</option>
+  </select>
+  <select id="fcat"  aria-label="Filter by category">
+  <option value="">All categories</option>
+  </select>
+  <span id="filter-count" class="filter-count" aria-live="polite"></span>
+  </div>
+
+  <div class="table-wrap">
+  <table>
+  <thead>
+  <tr><th scope="col">Date / note</th><th scope="col">Category</th><th scope="col" class="number">Amount</th><th scope="col" class="actions"><span class="sr">Actions</span></th></tr>
+  </thead>
+  <tbody id="rows"></tbody>
+  </table>
+  </div>
+  <button id="tx-more" class="ghost-btn wide tx-more" type="button" hidden>View all transactions</button>
+
+  <div id="empty" class="empty">
+  <span class="empty-symbol" aria-hidden="true">＋</span>
+  <h3>Start with one entry.</h3>
+  <p>No transactions in this period.<br>Add your first income or expense.</p>
+  </div>
+
+  <div class="ledger-foot">
+  <span>All transactions in the selected period</span>
+  <span id="period-label"></span>
+  </div>
+  </section>
+
+  <section class="card top-expenses">
+  <div class="card-head">
+  <div>
+  <p class="eyebrow">Biggest drains</p>
+  <h2>Largest expenses</h2>
+  </div>
+  </div>
+  <ol id="top-list" class="top-list"></ol>
+  </section>
+  </div>
+
+  <aside class="side">
+  <section class="card entry-panel" id="entry-panel">
+  <div class="card-head">
+  <div>
+  <p class="eyebrow">Bit by bit</p>
+  <h2 id="form-title">Record a transaction</h2>
+  </div>
+  <button class="icon-btn close-sheet" type="button" id="sheet-close"  aria-label="Close form"><svg class="ic" aria-hidden="true"><use href="#ic-close"></use></svg></button>
+  </div>
+
+  <div class="quick" id="quick"  aria-label="Quick fill">
+  <button type="button" data-q-type="expense" data-q-cat="Meals" data-q-amount="25000" data-q-note="Food">Food</button>
+  <button type="button" data-q-type="expense" data-q-cat="Ride Hailing" data-q-amount="15000" data-q-note="Transport">Transport</button>
+  <button type="button" data-q-type="expense" data-q-cat="Groceries" data-q-amount="50000" data-q-note="Groceries">Groceries</button>
+  <button type="button" data-q-type="expense" data-q-cat="Electricity & Water" data-q-amount="100000" data-q-note="Bills">Bills</button>
+  </div>
+  <div class="quick quick-date" id="quick-date"  aria-label="Quick date">
+  <button type="button" data-quickdate="0">Today</button>
+  <button type="button" data-quickdate="1">Yesterday</button>
+  </div>
+
+  <form id="entry" novalidate>
+  <fieldset id="entry-fields">
+  <div class="seg seg-four" role="group"  aria-label="Transaction type">
+  <label><input type="radio" name="type" value="expense" checked><span>Expense</span></label>
+  <label><input type="radio" name="type" value="income"><span>Income</span></label>
+  <label><input type="radio" name="type" value="savings"><span>Savings</span></label>
+  <label><input type="radio" name="type" value="obligation"><span>Obligation</span></label>
+  </div>
+  <label for="amount">Amount (Rp)</label>
+  <input id="amount" name="amount" type="text" inputmode="numeric" pattern="[0-9]*"  placeholder="0" required data-money>
+  <div class="form-pair">
+  <div>
+  <label for="date">Date</label>
+  <input id="date" name="date" type="date" min="0001-01-01" max="9999-12-31" required>
+  </div>
+  <div>
+  <label for="category">Category</label>
+  <select id="category" name="category"></select>
+  </div>
+  </div>
+  <div class="form-pair">
+  <div>
+  <label for="payment">Payment method <span class="optional">optional</span></label>
+  <select id="payment" name="payment_method"></select>
+  </div>
+  <div>
+  <label for="needwant">Need or want <span class="optional">optional</span></label>
+  <select id="needwant" name="need_want"></select>
+  </div>
+  </div>
+  <div id="goal-field" hidden>
+  <label for="entry-goal">Savings goal <span class="optional">optional</span></label>
+  <select id="entry-goal"></select>
+  <small class="note">Linked contributions add up in Savings Goals.</small>
+  </div>
+  <small id="date-hint" class="note">Past dates are fine. Dates after today are rejected.</small>
+  <div id="account-field" hidden>
+  <label for="account">Accounts</label>
+  <div class="inline-form">
+  <select id="account"></select>
+  <button id="open-transfer" class="ghost-btn" type="button">Transfer</button>
+  </div>
+  <small class="note">Transfers between your own accounts never count as income or expenses.</small>
+  </div>
+  <label for="notes">Note <span class="optional">optional</span></label>
+  <textarea id="notes" name="notes" rows="2" maxlength="500"  placeholder="What was it for?"></textarea>
+  <button id="save" class="primary" type="submit">Save transaction</button>
+  <button id="cancel" class="ghost-btn full" type="button" hidden>Cancel edit</button>
+  </fieldset>
+  </form>
+  </section>
+
+  </aside>
+  </div>
+  </section>
   </section>
 </main>
-<section id="print-report" aria-label="Laporan bulanan lengkap"></section>
+<section id="print-report"  aria-label="Full monthly report"></section>
 
-<button id="add-btn" class="fab" type="button" aria-label="Tambah transaksi" hidden>
+<button id="add-btn" class="fab" type="button"  aria-label="Add transaction" hidden>
   <svg class="ic" aria-hidden="true"><use href="#ic-plus"></use></svg>
-  <span>Tambah</span>
+  <span>Add</span>
 </button>
 
 <footer class="site-foot">
-  <span>kantong — lebih sadar, lebih tenang.</span>
-  <span>Catatan pribadi. Bukan nasihat keuangan.</span>
+  <span>kantong — a little more aware, a little calmer.</span>
+  <span>Personal records. Not financial advice.</span>
 </footer>
 
-<noscript>Aktifkan JavaScript untuk menggunakan Kantong.</noscript>
+<noscript>Enable JavaScript to use Kantong.</noscript>
 </body>
 </html>
